@@ -44,3 +44,26 @@ This creates a computation environment where older CPUs remain competitive.
 
 ## Project Structure
 
+PoLM/
+├── whitepaper/
+├── polm-core/
+├── node/
+├── simulator/
+├── benchmark/
+├── research/
+└── docs/
+
+
+---
+
+## Founder
+
+**Aluísio Fernandes (Aluminium)**  
+Founder of Proof of Legacy Memory
+
+---
+
+## Project Status
+
+🧪 Early Research & Prototype Phase
+
