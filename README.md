@@ -1,44 +1,46 @@
 # Proof of Legacy Memory (PoLM)
 
-Proof of Legacy Memory (PoLM) is a new consensus and computation model designed to favor latency-bound memory access instead of raw parallel processing power.
+Proof of Legacy Memory (PoLM) is a latency-bound consensus and computation model designed to restore computational relevance to legacy hardware.
 
-## Vision
+Unlike modern proof systems optimized for massive parallelism and GPU acceleration, PoLM intentionally favors sequential memory access and latency-dependent execution.
 
-Modern computation increasingly excludes older hardware due to GPU and massive parallelism requirements.
+---
 
-PoLM reverses this paradigm.
+## Philosophy
 
-Instead of rewarding parallel throughput, PoLM rewards:
+Modern distributed systems increasingly centralize computational power around specialized hardware.
 
-- Sequential memory access
-- Latency stability
-- Cache limitations
-- Deterministic execution paths
+PoLM introduces a different approach:
 
-This allows legacy machines to remain computationally competitive.
+> Computation should reward persistence, stability, and accessibility — not hardware privilege.
 
-## Core Concept
+Legacy machines become first-class participants again.
 
-The algorithm intentionally:
+---
 
-- Breaks GPU parallelism
-- Penalizes large cache prediction
-- Requires sequential dependency chains
-- Uses latency-sensitive workloads
+## Core Principles
 
-Older CPUs become viable nodes again.
+PoLM workloads are intentionally designed to:
 
-## Goals
+- Require slow sequential memory access
+- Limit effective parallel execution
+- Depend on real memory latency
+- Reduce cache prediction advantages
+- Penalize GPU-style throughput optimization
 
-- Democratize distributed computation
+This creates a computation environment where older CPUs remain competitive.
+
+---
+
+## Objectives
+
+- Democratize decentralized computation
+- Extend usable life of legacy hardware
 - Reduce electronic waste
-- Enable participation using legacy hardware
-- Create inclusive decentralized infrastructure
+- Enable global participation without specialized equipment
+- Research latency-based consensus systems
 
-## Founder
+---
 
-Aluísio Fernandes (Aluminium)
+## Project Structure
 
-## Status
-
-Early Research Phase
