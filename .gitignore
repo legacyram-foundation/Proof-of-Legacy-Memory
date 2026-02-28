@@ -1,0 +1,10 @@
+# Local node identity
+node_id.json
+
+# Local proofs
+proofs.json
+polm-core/proofs.json
+
+# Python cache
+__pycache__/
+polm-core/__pycache__/
