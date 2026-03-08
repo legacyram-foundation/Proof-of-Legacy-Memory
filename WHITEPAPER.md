@@ -5,20 +5,20 @@
 Proof of Legacy Memory is an experimental blockchain protocol designed
 to make old hardware economically useful again.
 
-Instead of favouring high-end GPUs or ASICs, PoLM attempts to
-balance mining performance across generations of hardware.
+Instead of favouring modern GPUs and ASICs, PoLM attempts to balance
+mining efficiency across generations of hardware.
 
-Older CPUs and memory architectures such as DDR2 and DDR3
-remain capable of participating in the network.
+Older CPUs and memory architectures such as DDR2 and DDR3 can still
+participate in the network.
 
 ## Motivation
 
-Modern proof-of-work systems rapidly obsolete hardware.
+Modern proof-of-work systems quickly obsolete hardware.
 
 PoLM attempts to reverse this by designing workloads that
-remain efficient on legacy systems.
+remain usable on legacy systems.
 
-This reduces electronic waste and increases decentralization.
+This helps reduce electronic waste and improves decentralization.
 
 ## Mining Model
 
@@ -50,7 +50,7 @@ Inspired by the 32-bit hardware era.
 
 Nodes communicate using TCP peer discovery.
 
-Peers broadcast new blocks across the network.
+Peers broadcast blocks across the network.
 
 ## Status
 

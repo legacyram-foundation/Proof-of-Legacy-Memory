@@ -1,55 +1,54 @@
-# Proof-of-Legacy-Memory (PoLM)
+# Proof of Legacy Memory (PoLM)
 
-Experimental blockchain protocol designed to give value to old hardware.
+Experimental blockchain protocol designed to give economic value
+to legacy computer hardware.
 
 ## Idea
 
-Most cryptocurrencies favor powerful GPUs and ASIC miners.
+Most cryptocurrencies require powerful GPUs or ASIC miners.
 
-PoLM explores a different idea:
+PoLM explores a different direction:
 
-Make old computers useful again.
+Making old hardware useful again.
 
 Hardware such as:
 
-Core2Duo  
-Athlon  
-DDR2  
-DDR3 systems  
+• Core2Duo
+• Athlon
+• DDR2 / DDR3 systems
 
 can still participate in mining.
 
 ## Components
 
 PoLM Node  
-PoLM Miner  
 PoLM Wallet  
 PoLM Explorer  
 PoLM Analyzer  
 
 ## Running a Node
 
-Clone repository
+Clone repository:
 
 git clone https://github.com/proof-of-legacy/Proof-of-Legacy-Memory.git
 
-Run node
+Run node:
 
 python3 polm_node.py
 
 ## Wallet
 
-Create wallet
+Create wallet:
 
 python3 polm_wallet.py
 
 ## Explorer
 
-Run explorer
+Run explorer:
 
 python3 polm_explorer_web.py
 
-Then open
+Open:
 
 http://localhost:5000
 
@@ -64,5 +63,3 @@ Inspired by the 32-bit computing era.
 ## Status
 
 Experimental Testnet
-
-Research protocol.
