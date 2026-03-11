@@ -107,5 +107,27 @@
     "latency": 6.022700548171997,
     "difficulty": 5,
     "hash": "000000897c0d500ee91ceefab16c9c3fbcc3f4ed48e3fdc4462003118bea58d1"
+  },
+  {
+    "index": 3,
+    "timestamp": 1773131354.3757515,
+    "prev_hash": "0047a3d916dca155567dbe72d4a6e520986a237d12d168b1a335d2939bc6fbcd",
+    "nonce": 24087926,
+    "miner": "e7bcc27c976401a205fa83429ce5637a162df10a18692d81f3494e3c1dc9919b",
+    "tx": [],
+    "latency": 1.785677433013916,
+    "difficulty": 5,
+    "hash": "00000001c7b53a5417535562e886ab58f79990fb0d8730b755571c9d65af20ca"
+  },
+  {
+    "index": 4,
+    "timestamp": 1773131371.039797,
+    "prev_hash": "000000897c0d500ee91ceefab16c9c3fbcc3f4ed48e3fdc4462003118bea58d1",
+    "nonce": 1053551530,
+    "miner": "e7bcc27c976401a205fa83429ce5637a162df10a18692d81f3494e3c1dc9919b",
+    "tx": [],
+    "latency": 2.5571608543395996,
+    "difficulty": 7,
+    "hash": "0000000003eacaa0cd7da657e2e53d63d16903c0e876ae62d8856902a0b08eef"
   }
 ]

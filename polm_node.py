@@ -20,12 +20,15 @@ PEERS = [
 
 TARGET_BLOCK_TIME = 15
 BLOCK_REWARD = 32
-
 MAX_SUPPLY = 32000000
 
 difficulty = 3
 max_threads = 4
+
 supply = 0
+blocks_mined = 0
+blocks_received = 0
+fork_rejects = 0
 
 mempool = []
 
@@ -120,13 +123,13 @@ def adjust_difficulty():
 
     global difficulty
 
-    if len(blockchain) < 5:
+    if len(blockchain) < 20:
         return
 
     last = blockchain[-1]["timestamp"]
-    prev = blockchain[-5]["timestamp"]
+    prev = blockchain[-20]["timestamp"]
 
-    avg = (last-prev)/5
+    avg = (last-prev)/20
 
     if avg < TARGET_BLOCK_TIME*0.7:
         difficulty += 1
@@ -140,6 +143,7 @@ def mine():
 
     global blockchain
     global supply
+    global blocks_mined
 
     while True:
 
@@ -183,6 +187,7 @@ def mine():
                 blockchain.append(block)
 
                 supply += BLOCK_REWARD
+                blocks_mined += 1
 
                 save_chain()
 
@@ -250,15 +255,23 @@ def sync_chain():
 @app.route("/receive_block",methods=["POST"])
 def receive():
 
+    global blocks_received
+    global fork_rejects
+
     block = request.json
 
     if block["prev_hash"] != blockchain[-1]["hash"]:
-        return "reject",400
+
+        fork_rejects += 1
+        return "fork reject",400
 
     if not block["hash"].startswith("0"*block["difficulty"]):
-        return "reject",400
+
+        return "invalid hash",400
 
     blockchain.append(block)
+
+    blocks_received += 1
 
     save_chain()
 
@@ -278,7 +291,11 @@ def stats():
         "height":len(blockchain),
         "difficulty":difficulty,
         "supply":supply,
-        "miner":wallet["address"][:16]
+        "miner":wallet["address"][:16],
+        "blocks_mined":blocks_mined,
+        "blocks_received":blocks_received,
+        "fork_rejects":fork_rejects,
+        "peers":len(PEERS)
     })
 
 # ---------------- START ----------------
@@ -299,7 +316,7 @@ def start_miners():
 
 # ---------------- BOOT ----------------
 
-print("\n===== PoLM v1.0 FINAL =====\n")
+print("\n===== PoLM v1.1 LAUNCH HARDENED =====\n")
 
 print("Node:",socket.gethostname())
 print("Miner:",wallet["address"][:16])
