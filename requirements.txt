@@ -1,2 +1,14 @@
-flask
-requests
+# PoLM — Proof of Legacy Memory
+# Dependências Python
+
+# Criptografia ECDSA real (altamente recomendado)
+ecdsa>=0.18.0
+
+# Criptografia AES-GCM para backup de wallet (recomendado)
+cryptography>=41.0.0
+
+# HTTP para o explorer web (opcional)
+flask>=3.0.0
+
+# Formatação de terminal (opcional)
+colorama>=0.4.6
