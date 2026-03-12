@@ -4,3 +4,9 @@ polm_reputation.json
 polm_wallet.json
 __pycache__/
 *.pyc
+wallet.json
+blockchain.json
+polm_chain.json
+__pycache__/
+*.pyc
+polm.log
