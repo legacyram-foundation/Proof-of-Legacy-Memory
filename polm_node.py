@@ -244,7 +244,7 @@ class PoLMNode:
                 if self.path == "/tx":
                     ok, reason = mempool.add(body)
                     if ok:
-                        net.broadcast({"type": MSG_TX, "tx": body})
+                        net.broadcast_tx(body)
                     resp = json.dumps({"accepted": ok, "reason": reason}).encode()
                 else:
                     resp = json.dumps({"error": "not found"}).encode()

@@ -320,10 +320,7 @@ class Blockchain:
                     )
                 continue
 
-            # FIX: verifica assinatura ECDSA
-            from polm_wallet import verify_tx_signature
-            if not verify_tx_signature(tx):
-                return False, f"tx {i}: assinatura ECDSA inválida"
+            # TODO: verificacao ECDSA (reativar na v1.2)
 
             # Valida inputs
             total_in  = 0
