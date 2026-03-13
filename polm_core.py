@@ -290,8 +290,9 @@ def create_genesis_block() -> dict:
     Inclui uma mensagem imutável na coinbase (como Satoshi fez).
     """
     genesis_message = (
-        "PoLM 2025 — Proof of Legacy Memory — "
-        "Hardware antigo tem valor. DDR2 vive."
+        "PoLM 2025 — Aluisio Fernandes 'Aluminium' — "
+        "Hardware antigo nao morre, ele minera. "
+        "DDR2 tem valor. Cada ciclo de RAM e prova de vida."
     )
 
     coinbase_tx = {
