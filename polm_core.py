@@ -29,7 +29,7 @@ HALVING_INTERVAL    = 210_000           # a cada 210.000 blocos, recompensa cai 
 TARGET_BLOCK_TIME   = 60                # segundos
 DIFFICULTY_WINDOW   = 144              # blocos para recalcular dificuldade (~1 dia)
 MIN_DIFFICULTY      = 10
-MAX_DIFFICULTY      = 28               # bits de dificuldade (256-bit hash)
+MAX_DIFFICULTY      = 22               # bits de dificuldade (256-bit hash)
 INITIAL_DIFFICULTY  = 14
 
 # Limites de bloco
