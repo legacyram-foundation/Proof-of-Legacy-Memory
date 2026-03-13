@@ -213,9 +213,9 @@ class PoLMNode:
     def _start_local_api(self) -> None:
         """API local HTTP na porta 5556 para wallet e ferramentas."""
         import http.server, urllib.parse
-        bc = self.bc
+        bc = self.chain
         mempool = self.mempool
-        net = self.net
+        net = self.peers
 
         class Handler(http.server.BaseHTTPRequestHandler):
             def log_message(self, *a): pass
@@ -446,13 +446,13 @@ class PoLMNode:
         @self.peers.on("GET_BALANCE")
         def on_get_balance(peer: Peer, payload: dict) -> None:
             addr = payload.get("address", "")
-            bal  = self.bc.utxo.balance(addr, self.bc.height)
+            bal  = self.chain.utxo.balance(addr, self.chain.height)
             peer.send("BALANCE", {"balance_sats": bal, "address": addr})
 
         @self.peers.on("GET_UTXOS")
         def on_get_utxos(peer: Peer, payload: dict) -> None:
             addr  = payload.get("address", "")
-            utxos = self.bc.utxo.get_by_address(addr, self.bc.height)
+            utxos = self.chain.utxo.get_by_address(addr, self.chain.height)
             peer.send("UTXOS", {"utxos": utxos})
 
         @self.peers.on(MSG_PONG)
