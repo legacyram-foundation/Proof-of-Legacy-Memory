@@ -33,6 +33,7 @@ import struct
 import sys
 import time
 from typing import Optional
+from polm_core import COIN, CHAIN_ID
 
 # ─── Tenta importar bibliotecas criptográficas ──────────────
 try:
@@ -318,6 +319,35 @@ def _sigdecode_der(sig, order):
     s     = int.from_bytes(rest[2: 2 + s_len], "big")
     return r, s
 
+def verify_tx_signature(tx: dict) -> bool:
+    """
+    Verifica todas as assinaturas ECDSA de uma transação.
+    Retorna True se todas forem válidas.
+    """
+    from polm_core import hash_transaction
+    sigs = tx.get("signatures", [])
+    if not sigs:
+        return False
+
+    txid = hash_transaction(tx)
+    msg  = bytes.fromhex(txid)
+
+    for sig_entry in sigs:
+        try:
+            pubkey_hex = sig_entry["pubkey"]
+            sig_hex    = sig_entry["sig"]
+            if _HAS_ECDSA:
+                vk  = VerifyingKey.from_string(bytes.fromhex(pubkey_hex), curve=SECP256k1)
+                sig = bytes.fromhex(sig_hex)
+                vk.verify_digest(sig, msg, sigdecode=_sigdecode_der)
+            else:
+                # Sem biblioteca ECDSA não podemos verificar — rejeita
+                return False
+        except Exception:
+            return False
+    return True
+
+
 # ═══════════════════════════════════════════════════════════
 # WALLET — ESTRUTURA E PERSISTÊNCIA
 # ═══════════════════════════════════════════════════════════
@@ -598,6 +628,111 @@ def cmd_info(args) -> None:
     print()
 
 
+def cmd_balance(args) -> None:
+    """Consulta saldo de um endereço conectando ao nó local."""
+    addr = args.address
+    if not addr:
+        if not os.path.exists(WALLET_FILE):
+            print("Wallet não encontrada.")
+            return
+        w    = PoLMWallet.load()
+        addr = w.primary_address
+
+    import socket, json as _json
+    try:
+        s = socket.create_connection(("127.0.0.1", 5555), timeout=5)
+        s.sendall((_json.dumps({"type": "GET_BALANCE", "address": addr}) + "\n").encode())
+        resp = b""
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            resp += chunk
+            if b"\n" in resp:
+                break
+        s.close()
+        data  = _json.loads(resp.decode().strip())
+        sats  = data.get("balance_sats", 0)
+        print(f"\n  Endereço : {addr}")
+        print(f"  Saldo    : {sats / COIN:.8f} PoLM  ({sats} sats)\n")
+    except Exception as e:
+        print(f"Erro ao conectar ao nó: {e}")
+        print("Certifique-se de que o nó está rodando (python3 polm_node.py)")
+
+
+def cmd_send(args) -> None:
+    """Envia PoLM para outro endereço via nó local."""
+    if not os.path.exists(WALLET_FILE):
+        print("Wallet não encontrada. Execute: python3 polm_wallet.py create")
+        return
+
+    w          = PoLMWallet.load()
+    from_addr  = args.from_addr or w.primary_address
+    to_addr    = args.to
+    amount_sat = int(float(args.amount) * COIN)
+    fee_sat    = int(float(args.fee) * COIN)
+
+    if not validate_address(to_addr):
+        print(f"Endereço destino inválido: {to_addr}")
+        return
+
+    # Busca UTXOs do nó local
+    import socket, json as _json
+    try:
+        s = socket.create_connection(("127.0.0.1", 5555), timeout=5)
+        s.sendall((_json.dumps({"type": "GET_UTXOS", "address": from_addr}) + "\n").encode())
+        resp = b""
+        while True:
+            chunk = s.recv(65536)
+            if not chunk:
+                break
+            resp += chunk
+            if b"\n" in resp:
+                break
+        s.close()
+        data  = _json.loads(resp.decode().strip())
+        utxos = data.get("utxos", [])
+    except Exception as e:
+        print(f"Erro ao conectar ao nó: {e}")
+        return
+
+    if not utxos:
+        print(f"Sem UTXOs disponíveis em {from_addr}")
+        print("(Lembre: coinbase leva 100 blocos para maturar)")
+        return
+
+    try:
+        tx = build_tx(w, from_addr, to_addr, amount_sat, fee_sat, utxos)
+    except ValueError as e:
+        print(f"Erro: {e}")
+        return
+
+    # Envia tx ao nó
+    try:
+        s = socket.create_connection(("127.0.0.1", 5555), timeout=5)
+        s.sendall((_json.dumps({"type": "TX", "tx": tx}) + "\n").encode())
+        resp = b""
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            resp += chunk
+            if b"\n" in resp:
+                break
+        s.close()
+        data = _json.loads(resp.decode().strip())
+        if data.get("accepted"):
+            print(f"\n  ✓ Transação enviada!")
+            print(f"  TXID : {tx['txid']}")
+            print(f"  Para : {to_addr}")
+            print(f"  Valor: {amount_sat / COIN:.8f} PoLM")
+            print(f"  Taxa : {fee_sat / COIN:.8f} PoLM\n")
+        else:
+            print(f"  ✗ Transação rejeitada: {data.get('reason', '?')}")
+    except Exception as e:
+        print(f"Erro ao enviar: {e}")
+
+
 def cmd_receive(args) -> None:
     if not os.path.exists(WALLET_FILE):
         print("Wallet não encontrada.")
@@ -646,6 +781,15 @@ def main():
     sub.add_parser("info",    help="Informações da wallet")
     sub.add_parser("receive", help="Exibe endereço para receber")
 
+    p_bal = sub.add_parser("balance", help="Consulta saldo")
+    p_bal.add_argument("--address", default="", help="Endereço a consultar (padrão: wallet principal)")
+
+    p_send = sub.add_parser("send", help="Envia PoLM")
+    p_send.add_argument("--to",       required=True,  help="Endereço destino")
+    p_send.add_argument("--amount",   required=True,  help="Quantidade em PoLM")
+    p_send.add_argument("--fee",      default="0.001", help="Taxa em PoLM (padrão: 0.001)")
+    p_send.add_argument("--from",     dest="from_addr", default="", help="Endereço origem")
+
     p_export = sub.add_parser("export", help="Exporta wallet criptografada")
     p_export.add_argument("--password", required=True)
 
@@ -659,6 +803,8 @@ def main():
         "create":  cmd_create,
         "info":    cmd_info,
         "receive": cmd_receive,
+        "balance": cmd_balance,
+        "send":    cmd_send,
         "export":  cmd_export,
         "import":  cmd_import,
     }

@@ -36,6 +36,7 @@ from collections import defaultdict, deque
 from typing import Callable, Optional
 
 from polm_core import (
+    MAX_PEERS_FROM_MSG,
     NETWORK_MAGIC, DEFAULT_PORT, MAX_PEERS,
     PROTOCOL_VERSION, PEERS_FILE, NETWORK_VERSION,
 )
@@ -284,15 +285,9 @@ class PeerManager:
 
     # ── Handlers ─────────────────────────────────────────
 
-    def on(self, cmd: str, handler: Callable = None):
-        """Registra um handler. Pode ser usado como decorator ou chamada direta."""
-        def decorator(fn):
-            self._handlers[cmd].append(fn)
-            return fn
-        if handler is not None:
-            self._handlers[cmd].append(handler)
-            return handler
-        return decorator
+    def on(self, cmd: str, handler: Callable) -> None:
+        """Registra um handler para um tipo de mensagem."""
+        self._handlers[cmd].append(handler)
 
     def _dispatch(self, peer: Peer, cmd: str, payload: dict) -> None:
         for handler in self._handlers.get(cmd, []):
@@ -313,7 +308,6 @@ class PeerManager:
     def _server_loop(self) -> None:
         srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         srv.bind(("0.0.0.0", self._my_port))
         srv.listen(32)
 

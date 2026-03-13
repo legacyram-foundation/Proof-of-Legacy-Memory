@@ -1,8 +1,14 @@
 """
-polm_core.py — PoLM Blockchain Core
-=====================================
-Constantes, estruturas de dados, hashing, validação, genesis block.
-Importado por todos os outros módulos.
+polm_core.py — PoLM Blockchain Core v1.1
+==========================================
+CHANGELOG v1.1:
+  - Genesis message corrigida (Aluisio Fernandes 'Aluminium')
+  - validate_tx_structure: exige campo 'signatures' em txs não-coinbase
+  - validate_block_structure: verifica altura sequencial
+  - Replay attack: txs incluem chain_id no hash
+  - Constantes de rede ajustadas para lançamento público
+  - Bootstrap seeds removidos de IPs locais
+  - MAX_REORG_DEPTH: limita reorganização a 100 blocos
 """
 
 import hashlib
@@ -16,34 +22,32 @@ from typing import Optional
 # ═══════════════════════════════════════════════════════════
 
 NETWORK_VERSION   = 1
-NETWORK_MAGIC     = 0xD9B4BEF9          # 4 bytes de identificação da rede
-COIN              = 100_000_000         # 1 PoLM = 100.000.000 satoshis (8 casas)
-MAX_SUPPLY_COINS  = 32_000_000          # 32 milhões de PoLM
+NETWORK_MAGIC     = 0xD9B4BEF9
+CHAIN_ID          = "polm-mainnet-1"     # anti replay attack
+COIN              = 100_000_000
+MAX_SUPPLY_COINS  = 32_000_000
 MAX_SUPPLY_SATS   = MAX_SUPPLY_COINS * COIN
 
-# Recompensa inicial e halving (como Bitcoin)
-INITIAL_REWARD_SATS = 50 * COIN         # 50 PoLM no bloco 0
-HALVING_INTERVAL    = 210_000           # a cada 210.000 blocos, recompensa cai pela metade
+INITIAL_REWARD_SATS = 50 * COIN
+HALVING_INTERVAL    = 210_000
 
-# Tempo alvo entre blocos
-TARGET_BLOCK_TIME   = 60                # segundos
-DIFFICULTY_WINDOW   = 144              # blocos para recalcular dificuldade (~1 dia)
+TARGET_BLOCK_TIME   = 60
+DIFFICULTY_WINDOW   = 144
 MIN_DIFFICULTY      = 10
-MAX_DIFFICULTY      = 22               # bits de dificuldade (256-bit hash)
+MAX_DIFFICULTY      = 22               # teto realista para 2 PCs DDR4
 INITIAL_DIFFICULTY  = 14
 
-# Limites de bloco
-MAX_BLOCK_SIZE      = 1_000_000        # 1 MB
+MAX_BLOCK_SIZE      = 1_000_000
 MAX_TX_PER_BLOCK    = 4_000
 MAX_MEMPOOL_SIZE    = 50_000
-COINBASE_MATURITY   = 100              # blocos para maturar recompensa de mineração
+COINBASE_MATURITY   = 100
+MAX_REORG_DEPTH     = 100              # FIX: limita reorganização maliciosa
 
-# Rede
 DEFAULT_PORT        = 5555
 MAX_PEERS           = 125
-PROTOCOL_VERSION    = "PoLM/1.0"
+MAX_PEERS_FROM_MSG  = 50               # FIX: limita lista de peers recebida
+PROTOCOL_VERSION    = "PoLM/1.1"
 
-# Arquivo de dados
 CHAIN_FILE          = "polm_chain.db"
 UTXO_FILE           = "polm_utxo.db"
 PEERS_FILE          = "polm_peers.json"
@@ -54,20 +58,12 @@ WALLET_FILE         = "polm_wallet.json"
 # ═══════════════════════════════════════════════════════════
 
 def sha256d(data: bytes) -> bytes:
-    """Hash duplo SHA-256 (igual ao Bitcoin)."""
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
-
 
 def sha256d_hex(data: bytes) -> str:
     return sha256d(data).hex()
 
-
 def hash_block_header(header: dict) -> str:
-    """
-    Hash determinístico do cabeçalho do bloco.
-    Campos cobertos: version, prev_hash, merkle_root,
-                     timestamp, difficulty, nonce, ram_proof
-    """
     fields = (
         header["version"],
         header["prev_hash"],
@@ -80,16 +76,17 @@ def hash_block_header(header: dict) -> str:
     raw = "|".join(str(f) for f in fields).encode()
     return sha256d_hex(raw)
 
-
 def hash_transaction(tx: dict) -> str:
-    """Hash de uma transação (todos os campos exceto 'txid')."""
-    clean = {k: v for k, v in tx.items() if k != "txid"}
-    raw   = json.dumps(clean, sort_keys=True, separators=(",", ":")).encode()
+    """
+    Hash da transação incluindo CHAIN_ID para prevenir replay attacks.
+    Exclui campos 'txid' e 'signatures' do hash (como Bitcoin).
+    """
+    clean = {k: v for k, v in tx.items() if k not in ("txid", "signatures")}
+    clean["_chain_id"] = CHAIN_ID      # FIX: anti replay attack
+    raw = json.dumps(clean, sort_keys=True, separators=(",", ":")).encode()
     return sha256d_hex(raw)
 
-
-def merkle_root(txids: list[str]) -> str:
-    """Calcula a raiz da Merkle Tree de uma lista de txids (hex de 64 chars)."""
+def merkle_root(txids: list) -> str:
     if not txids:
         return "0" * 64
 
@@ -103,7 +100,6 @@ def merkle_root(txids: list[str]) -> str:
         return hashlib.sha256(s.encode()).hexdigest()
 
     layer = [_ensure_hex64(t) for t in txids]
-
     while len(layer) > 1:
         if len(layer) % 2:
             layer.append(layer[-1])
@@ -114,41 +110,26 @@ def merkle_root(txids: list[str]) -> str:
     return layer[0]
 
 # ═══════════════════════════════════════════════════════════
-# RECOMPENSA DE MINERAÇÃO (Halving como Bitcoin)
+# RECOMPENSA
 # ═══════════════════════════════════════════════════════════
 
 def block_reward_sats(height: int) -> int:
-    """
-    Calcula a recompensa em satoshis para um bloco de altura `height`.
-    A recompensa cai pela metade a cada HALVING_INTERVAL blocos.
-    Após ~22 halvings a recompensa é 0 (supply esgotado).
-    """
     halvings = height // HALVING_INTERVAL
     if halvings >= 64:
         return 0
-    reward = INITIAL_REWARD_SATS >> halvings
-    return reward
+    return INITIAL_REWARD_SATS >> halvings
 
 # ═══════════════════════════════════════════════════════════
 # DIFICULDADE
 # ═══════════════════════════════════════════════════════════
 
 def bits_to_target(bits: int) -> int:
-    """Converte bits de dificuldade em target numérico."""
     return 2 ** (256 - bits)
 
-
 def hash_meets_target(h: str, bits: int) -> bool:
-    """Verifica se o hash satisfaz a dificuldade atual."""
     return int(h, 16) < bits_to_target(bits)
 
-
-def calculate_next_difficulty(last_blocks: list[dict]) -> int:
-    """
-    Retarget de dificuldade (janela deslizante).
-    Analisa os últimos DIFFICULTY_WINDOW blocos e ajusta para
-    manter o tempo médio próximo de TARGET_BLOCK_TIME.
-    """
+def calculate_next_difficulty(last_blocks: list) -> int:
     if len(last_blocks) < 2:
         return INITIAL_DIFFICULTY
 
@@ -161,9 +142,7 @@ def calculate_next_difficulty(last_blocks: list[dict]) -> int:
 
     current_diff = window[-1].get("difficulty", INITIAL_DIFFICULTY)
     ratio        = elapsed / expected
-
-    # Anti-oscillação: muda no máximo 4x por janela (como Bitcoin)
-    ratio = max(0.5, min(2.0, ratio))
+    ratio        = max(0.5, min(2.0, ratio))   # muda no máx 1 bit por janela
 
     import math
     new_diff = current_diff - math.log2(ratio)
@@ -174,9 +153,7 @@ def calculate_next_difficulty(last_blocks: list[dict]) -> int:
 # VALIDAÇÃO DE TRANSAÇÃO
 # ═══════════════════════════════════════════════════════════
 
-def validate_tx_structure(tx: dict) -> tuple[bool, str]:
-    """Validação estrutural de uma transação (sem verificar UTXOs)."""
-
+def validate_tx_structure(tx: dict) -> tuple:
     if not isinstance(tx, dict):
         return False, "tx não é um objeto"
 
@@ -191,27 +168,43 @@ def validate_tx_structure(tx: dict) -> tuple[bool, str]:
     if not isinstance(tx["outputs"], list) or not tx["outputs"]:
         return False, "outputs inválidos"
 
+    is_cb = _is_coinbase(tx)
+
+    # FIX: transações não-coinbase DEVEM ter assinaturas
+    if not is_cb:
+        sigs = tx.get("signatures", [])
+        if not sigs or not isinstance(sigs, list):
+            return False, "transação sem assinaturas"
+        for sig in sigs:
+            if "pubkey" not in sig or "sig" not in sig:
+                return False, "assinatura mal formada"
+
     for i, inp in enumerate(tx["inputs"]):
         if not isinstance(inp, dict):
             return False, f"input {i} inválido"
-        if "txid" not in inp or "vout" not in inp:
-            # Coinbase tem txid "0"*64 e vout -1
-            if inp.get("txid") != "0" * 64:
+        if not is_cb:
+            if "txid" not in inp or "vout" not in inp:
                 return False, f"input {i} sem txid/vout"
+            if not isinstance(inp["vout"], int) or inp["vout"] < 0:
+                return False, f"input {i} vout inválido"
 
     for i, out in enumerate(tx["outputs"]):
         if not isinstance(out, dict):
             return False, f"output {i} inválido"
         if "value" not in out or "address" not in out:
             return False, f"output {i} sem value/address"
-        if not isinstance(out["value"], int) or out["value"] < 0:
-            return False, f"output {i} com value inválido"
+        if not isinstance(out["value"], int) or out["value"] <= 0:
+            return False, f"output {i} value inválido"
         if not isinstance(out["address"], str) or len(out["address"]) < 20:
-            return False, f"output {i} com address inválido"
+            return False, f"output {i} address inválido"
 
     total_out = sum(o["value"] for o in tx["outputs"])
     if total_out > MAX_SUPPLY_SATS:
         return False, "outputs excedem supply máximo"
+
+    # FIX: locktime deve ser inteiro
+    if not isinstance(tx.get("locktime"), int):
+        return False, "locktime inválido"
 
     return True, "ok"
 
@@ -219,9 +212,7 @@ def validate_tx_structure(tx: dict) -> tuple[bool, str]:
 # VALIDAÇÃO DE BLOCO
 # ═══════════════════════════════════════════════════════════
 
-def validate_block_structure(block: dict) -> tuple[bool, str]:
-    """Valida a estrutura e consistência de um bloco."""
-
+def validate_block_structure(block: dict, prev_block: dict = None) -> tuple:
     required = {
         "version", "height", "prev_hash", "merkle_root",
         "timestamp", "difficulty", "nonce", "hash",
@@ -231,48 +222,69 @@ def validate_block_structure(block: dict) -> tuple[bool, str]:
     if missing:
         return False, f"campos faltando: {missing}"
 
-    # Hash do bloco
+    # FIX: versão deve ser compatível
+    if block["version"] != NETWORK_VERSION:
+        return False, f"versão incompatível: {block['version']}"
+
+    # Hash
     computed = hash_block_header(block)
     if computed != block["hash"]:
-        return False, f"hash inválido: {computed[:8]}… ≠ {block['hash'][:8]}…"
+        return False, f"hash inválido"
 
     # PoW
     if not hash_meets_target(block["hash"], block["difficulty"]):
-        return False, f"hash não atende dificuldade {block['difficulty']}"
+        return False, f"PoW insuficiente"
+
+    # FIX: dificuldade dentro dos limites
+    if not (MIN_DIFFICULTY <= block["difficulty"] <= MAX_DIFFICULTY):
+        return False, f"dificuldade fora dos limites: {block['difficulty']}"
+
+    # FIX: altura sequencial
+    if prev_block and block["height"] != prev_block["height"] + 1:
+        return False, f"altura não sequencial"
 
     # Merkle root
-    txids = [tx.get("txid", hash_transaction(tx)) for tx in block["transactions"]]
+    txids       = [tx.get("txid", hash_transaction(tx)) for tx in block["transactions"]]
     computed_mr = merkle_root(txids)
     if computed_mr != block["merkle_root"]:
         return False, "merkle_root inválido"
 
-    # Número de transações
-    if len(block["transactions"]) > MAX_TX_PER_BLOCK:
-        return False, "excesso de transações"
-
-    # Primeira transação deve ser coinbase
     if not block["transactions"]:
         return False, "bloco sem transações"
 
+    if len(block["transactions"]) > MAX_TX_PER_BLOCK:
+        return False, "excesso de transações"
+
+    # Coinbase
     coinbase = block["transactions"][0]
     if not _is_coinbase(coinbase):
         return False, "primeira tx não é coinbase"
 
-    # Valida estrutura de cada transação
+    # FIX: apenas uma coinbase por bloco
+    for tx in block["transactions"][1:]:
+        if _is_coinbase(tx):
+            return False, "múltiplas coinbase no bloco"
+
+    # Valida estrutura de cada tx
     for i, tx in enumerate(block["transactions"]):
         ok, reason = validate_tx_structure(tx)
         if not ok:
             return False, f"tx {i}: {reason}"
 
-    # Timestamp não pode ser muito no futuro (2 horas)
+    # Timestamp
     if block["timestamp"] > time.time() + 7200:
         return False, "timestamp no futuro"
 
+    if prev_block and block["timestamp"] < prev_block["timestamp"] - 600:
+        return False, "timestamp retroativo"
+
+    # FIX: endereço do minerador deve ser válido
+    if not isinstance(block["miner"], str) or len(block["miner"]) < 20:
+        return False, "endereço do minerador inválido"
+
     return True, "ok"
 
-
 def _is_coinbase(tx: dict) -> bool:
-    """Verifica se uma transação é coinbase."""
     inputs = tx.get("inputs", [])
     return (
         len(inputs) == 1
@@ -285,10 +297,6 @@ def _is_coinbase(tx: dict) -> bool:
 # ═══════════════════════════════════════════════════════════
 
 def create_genesis_block() -> dict:
-    """
-    Cria o bloco gênesis do PoLM.
-    Inclui uma mensagem imutável na coinbase (como Satoshi fez).
-    """
     genesis_message = (
         "PoLM 2025 — Aluisio Fernandes 'Aluminium' — "
         "Hardware antigo nao morre, ele minera. "
@@ -298,10 +306,10 @@ def create_genesis_block() -> dict:
     coinbase_tx = {
         "version": 1,
         "inputs": [{
-            "txid":       "0" * 64,
-            "vout":       -1,
-            "coinbase":   genesis_message.encode().hex(),
-            "sequence":   0xFFFFFFFF,
+            "txid":     "0" * 64,
+            "vout":     -1,
+            "coinbase": genesis_message.encode().hex(),
+            "sequence": 0xFFFFFFFF,
         }],
         "outputs": [{
             "value":   INITIAL_REWARD_SATS,
@@ -318,14 +326,13 @@ def create_genesis_block() -> dict:
         "timestamp":    1_700_000_000,
         "difficulty":   INITIAL_DIFFICULTY,
         "nonce":        0,
-        "miner":        "PoLM-Genesis",
+        "miner":        "PoLM-Genesis-Aluminium",
         "transactions": [coinbase_tx],
         "ram_proof":    "genesis",
         "ram_score":    0.0,
     }
 
-    txids             = [coinbase_tx["txid"]]
+    txids                = [coinbase_tx["txid"]]
     genesis["merkle_root"] = merkle_root(txids)
-    genesis["hash"]   = "00000000" + "0" * 56   # hash simbólico do genesis
-
+    genesis["hash"]      = "00000000" + "0" * 56
     return genesis

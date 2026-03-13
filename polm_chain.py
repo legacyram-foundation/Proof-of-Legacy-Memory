@@ -25,7 +25,7 @@ from polm_core import (
     hash_block_header, hash_transaction, merkle_root,
     validate_block_structure, validate_tx_structure,
     create_genesis_block, INITIAL_DIFFICULTY,
-    hash_meets_target, _is_coinbase,
+    hash_meets_target, _is_coinbase, MAX_REORG_DEPTH,
 )
 
 log = logging.getLogger("PoLM.Chain")
@@ -320,6 +320,11 @@ class Blockchain:
                     )
                 continue
 
+            # FIX: verifica assinatura ECDSA
+            from polm_wallet import verify_tx_signature
+            if not verify_tx_signature(tx):
+                return False, f"tx {i}: assinatura ECDSA inválida"
+
             # Valida inputs
             total_in  = 0
             total_out = sum(o["value"] for o in tx["outputs"])
@@ -352,6 +357,11 @@ class Blockchain:
         """
         Resolve fork: aceita a cadeia mais longa (regra de Nakamoto).
         """
+        # FIX: limita profundidade de reorganização
+        reorg_depth = len(self._chain) - parent_idx - 1
+        if reorg_depth > MAX_REORG_DEPTH:
+            return False, f"reorg rejeitada: profundidade {reorg_depth} > {MAX_REORG_DEPTH}"
+
         fork_chain = self._chain[:parent_idx + 1] + [block]
         if len(fork_chain) <= len(self._chain):
             return False, "fork rejeitado: cadeia atual é mais longa"

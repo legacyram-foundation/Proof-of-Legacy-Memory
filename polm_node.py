@@ -461,7 +461,6 @@ Exemplos:
     parser.add_argument("--port",     type=int, default=DEFAULT_PORT, help=f"Porta P2P (padrão: {DEFAULT_PORT})")
     parser.add_argument("--no-mine",  action="store_true",   help="Inicia sem mineração")
     parser.add_argument("--debug",    action="store_true",   help="Log nível DEBUG")
-    parser.add_argument("--ram-type",  dest="ram_type", default="",  help="Tipo de RAM: DDR2, DDR3, DDR4, DDR5")
     args = parser.parse_args()
 
     if args.debug:
@@ -482,12 +481,7 @@ Exemplos:
     threads = max(1, min(args.threads, 8))
 
     # Banner
-    if args.ram_type:
-        from polm_ram import RAM_MULTIPLIERS
-        ram_type = args.ram_type.upper()
-        ram_mult = RAM_MULTIPLIERS.get(ram_type, 1.0)
-    else:
-        ram_type, ram_mult = detect_ram_type()
+    ram_type, ram_mult = detect_ram_type()
     print("\n" + "═" * 62)
     print("   ██████╗  ██████╗ ██╗     ███╗   ███╗")
     print("   ██╔══██╗██╔═══██╗██║     ████╗ ████║")
