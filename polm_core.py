@@ -28,9 +28,9 @@ HALVING_INTERVAL    = 210_000           # a cada 210.000 blocos, recompensa cai 
 # Tempo alvo entre blocos
 TARGET_BLOCK_TIME   = 60                # segundos
 DIFFICULTY_WINDOW   = 144              # blocos para recalcular dificuldade (~1 dia)
-MIN_DIFFICULTY      = 8
-MAX_DIFFICULTY      = 64               # bits de dificuldade (256-bit hash)
-INITIAL_DIFFICULTY  = 16
+MIN_DIFFICULTY      = 10
+MAX_DIFFICULTY      = 28               # bits de dificuldade (256-bit hash)
+INITIAL_DIFFICULTY  = 14
 
 # Limites de bloco
 MAX_BLOCK_SIZE      = 1_000_000        # 1 MB
@@ -163,7 +163,7 @@ def calculate_next_difficulty(last_blocks: list[dict]) -> int:
     ratio        = elapsed / expected
 
     # Anti-oscillação: muda no máximo 4x por janela (como Bitcoin)
-    ratio = max(0.25, min(4.0, ratio))
+    ratio = max(0.5, min(2.0, ratio))
 
     import math
     new_diff = current_diff - math.log2(ratio)
