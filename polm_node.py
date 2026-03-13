@@ -210,7 +210,56 @@ class PoLMNode:
 
     # ── Inicialização ────────────────────────────────────
 
+    def _start_local_api(self) -> None:
+        """API local HTTP na porta 5556 para wallet e ferramentas."""
+        import http.server, urllib.parse
+        bc = self.bc
+        mempool = self.mempool
+        net = self.net
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def log_message(self, *a): pass
+            def do_GET(self):
+                p = urllib.parse.urlparse(self.path)
+                q = urllib.parse.parse_qs(p.query)
+                if p.path == "/balance":
+                    addr = q.get("address", [""])[0]
+                    bal  = bc.utxo.balance(addr, bc.height)
+                    resp = json.dumps({"balance_sats": bal}).encode()
+                elif p.path == "/utxos":
+                    addr  = q.get("address", [""])[0]
+                    utxos = bc.utxo.get_by_address(addr, bc.height)
+                    resp  = json.dumps({"utxos": utxos}).encode()
+                elif p.path == "/height":
+                    resp = json.dumps({"height": bc.height}).encode()
+                else:
+                    resp = json.dumps({"error": "not found"}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(resp)
+            def do_POST(self):
+                length = int(self.headers.get("Content-Length", 0))
+                body   = json.loads(self.rfile.read(length))
+                if self.path == "/tx":
+                    ok, reason = mempool.add(body)
+                    if ok:
+                        net.broadcast({"type": MSG_TX, "tx": body})
+                    resp = json.dumps({"accepted": ok, "reason": reason}).encode()
+                else:
+                    resp = json.dumps({"error": "not found"}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(resp)
+
+        srv = http.server.HTTPServer(("127.0.0.1", 5556), Handler)
+        t   = threading.Thread(target=srv.serve_forever, name="local.api", daemon=True)
+        t.start()
+        log.info("API local em http://127.0.0.1:5556")
+
     def start(self) -> None:
+        self._start_local_api()
         log.info("Inicializando blockchain…")
         self.chain.initialize()
 

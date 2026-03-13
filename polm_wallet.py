@@ -640,18 +640,10 @@ def cmd_balance(args) -> None:
 
     import socket, json as _json
     try:
-        s = socket.create_connection(("127.0.0.1", 5555), timeout=5)
-        s.sendall((_json.dumps({"type": "GET_BALANCE", "address": addr}) + "\n").encode())
-        resp = b""
-        while True:
-            chunk = s.recv(4096)
-            if not chunk:
-                break
-            resp += chunk
-            if b"\n" in resp:
-                break
+        s = socket.create_connection(("127.0.0.1", 5556), timeout=5)
+        import urllib.request as _ur
         s.close()
-        data  = _json.loads(resp.decode().strip())
+        data = _json.loads(_ur.urlopen(f"http://127.0.0.1:5556/balance?address={addr}").read())
         sats  = data.get("balance_sats", 0)
         print(f"\n  Endereço : {addr}")
         print(f"  Saldo    : {sats / COIN:.8f} PoLM  ({sats} sats)\n")
@@ -679,18 +671,10 @@ def cmd_send(args) -> None:
     # Busca UTXOs do nó local
     import socket, json as _json
     try:
-        s = socket.create_connection(("127.0.0.1", 5555), timeout=5)
-        s.sendall((_json.dumps({"type": "GET_UTXOS", "address": from_addr}) + "\n").encode())
-        resp = b""
-        while True:
-            chunk = s.recv(65536)
-            if not chunk:
-                break
-            resp += chunk
-            if b"\n" in resp:
-                break
+        s = socket.create_connection(("127.0.0.1", 5556), timeout=5)
+        import urllib.request as _ur
         s.close()
-        data  = _json.loads(resp.decode().strip())
+        data = _json.loads(_ur.urlopen(f"http://127.0.0.1:5556/utxos?address={from_addr}").read())
         utxos = data.get("utxos", [])
     except Exception as e:
         print(f"Erro ao conectar ao nó: {e}")
@@ -709,7 +693,7 @@ def cmd_send(args) -> None:
 
     # Envia tx ao nó
     try:
-        s = socket.create_connection(("127.0.0.1", 5555), timeout=5)
+        s = socket.create_connection(("127.0.0.1", 5556), timeout=5)
         s.sendall((_json.dumps({"type": "TX", "tx": tx}) + "\n").encode())
         resp = b""
         while True:
