@@ -437,7 +437,7 @@ class PoLMNode:
         @self.peers.on(MSG_PEERS)
         def on_peers(peer: Peer, payload: dict) -> None:
             for entry in payload.get("peers", []):
-                self.peers.add_peer(entry["ip"], entry.get("port", DEFAULT_PORT))
+                self.peers.add_peer(entry["ip"], DEFAULT_PORT)
 
         @self.peers.on(MSG_PING)
         def on_ping(peer: Peer, payload: dict) -> None:
