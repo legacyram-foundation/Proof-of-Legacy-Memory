@@ -1,368 +1,105 @@
 """
-polm_ram.py — Prova de Latência de RAM v2.0
-=============================================
-© 2025 Aluisio Fernandes "Aluminium" — Todos os direitos reservados.
-Proof of Legacy Memory (PoLM) — Licença proprietária PoLM-1.0
-
-CHANGELOG v2.0:
-  - Detecção anti-VM (VMware, VirtualBox, QEMU, WSL, Docker, KVM)
-  - Fingerprint físico de hardware (CPU serial, motherboard, RAM slots)
-  - Benchmark de latência real para validar tipo de RAM declarado
-  - Detecção de tentativa de falsificação de tipo de RAM
-  - Score vinculado ao fingerprint do hardware
-  - Proteção contra replay de prova (seed derivado do bloco + hardware)
-  - Verificação de plausibilidade física de latência
-  - Logs de tentativa de trapaça
+polm_ram.py — Prova de Latência de RAM Física (PoLM Consensus) v1.2
+=====================================================================
+PROTEÇÕES ANTI-TRAPAÇA v1.2:
+  1. Buffer > cache L3 — garante acesso à RAM física
+  2. Multi-round com seeds derivados do block_hash
+  3. Variance check — RAM virtual é artificialmente uniforme
+  4. Thermal fingerprint — RAM física aquece e fica mais lenta
+  5. Page fault detection — RAM física tem page faults reais
+  6. Swap detection — penaliza zRAM/swap ativo
+  7. Confidence score — penaliza qualquer suspeita de virtualização
 """
 
 import hashlib
 import os
 import platform
 import random
-import re
-import struct
 import subprocess
-import sys
 import time
 from typing import Optional, Tuple
 
-# ═══════════════════════════════════════════════════════════
-# PARÂMETROS
-# ═══════════════════════════════════════════════════════════
+GRAPH_SIZE    = 500_000
+NUM_ROUNDS    = 3
+MIN_VARIANCE  = 0.02
+MAX_VARIANCE  = 0.35
+SCORE_MIN     = 0.1
+SCORE_MAX     = 200.0
+MIN_BUFFER_MB = 256
 
-GRAPH_SIZE      = 300_000
-SCORE_MIN       = 0.1
-SCORE_MAX       = 200.0
-CHEAT_LOG_FILE  = "polm_cheat.log"
-
-# Multiplicadores por geração de RAM
 RAM_MULTIPLIERS = {
-    "DDR2":   2.5,
-    "DDR3":   1.8,
-    "DDR4":   1.0,
-    "DDR5":   0.6,
-    "LPDDR4": 0.9,
-    "LPDDR5": 0.55,
-    "AUTO":   1.0,
+    "DDR1": 6.0, "DDR": 6.0,
+    "DDR2": 4.0, "DDR3": 2.5,
+    "DDR4": 1.0, "DDR5": 0.4,
+    "LPDDR3": 2.0, "LPDDR4": 0.9, "LPDDR5": 0.35,
+    "AUTO": 1.0,
 }
 
-# Latência esperada por tipo de RAM (ms para 300k acessos em 256MB)
-# Hardware físico real tem latências nestas faixas
-RAM_LATENCY_RANGES = {
-    "DDR2":   (4.0,  20.0),   # DDR2: muito lento, ampla variação
-    "DDR3":   (2.5,  10.0),   # DDR3: lento
-    "DDR4":   (1.0,   5.0),   # DDR4: rápido
-    "DDR5":   (0.5,   3.0),   # DDR5: muito rápido
-    "LPDDR4": (1.2,   5.5),
-    "LPDDR5": (0.6,   3.5),
-    "AUTO":   (0.5,  20.0),   # sem validação se AUTO
-}
-
-# ═══════════════════════════════════════════════════════════
-# DETECÇÃO ANTI-VM
-# ═══════════════════════════════════════════════════════════
-
-def _log_cheat(reason: str) -> None:
-    """Registra tentativa de trapaça."""
-    ts  = time.strftime("%Y-%m-%d %H:%M:%S")
-    msg = f"[{ts}] CHEAT_DETECTED: {reason}\n"
+def detect_l3_cache_mb() -> int:
     try:
-        with open(CHEAT_LOG_FILE, "a") as f:
-            f.write(msg)
+        for idx in range(10):
+            path = f"/sys/devices/system/cpu/cpu0/cache/index{idx}/level"
+            if not os.path.exists(path):
+                break
+            if open(path).read().strip() == "3":
+                s = open(f"/sys/devices/system/cpu/cpu0/cache/index{idx}/size").read().strip()
+                if s.endswith("K"): return int(s[:-1]) // 1024
+                if s.endswith("M"): return int(s[:-1])
     except Exception:
         pass
-
-
-def detect_virtualization() -> Tuple[bool, str]:
-    """
-    Detecta se o software está rodando em ambiente virtualizado.
-    Retorna (is_virtual, reason).
-    
-    Detecta: VMware, VirtualBox, QEMU, KVM, Hyper-V, WSL, Docker,
-             LXC, OpenVZ, Xen, Parallels.
-    """
-    if platform.system() != "Linux":
-        # Em outros SOs não conseguimos verificar com confiança
-        return False, "ok"
-
-    reasons = []
-
-    # 1. Verifica /proc/cpuinfo por marcadores de VM
-    try:
-        cpuinfo = open("/proc/cpuinfo").read().lower()
-        vm_markers = [
-            ("vmware",    "VMware detectado em /proc/cpuinfo"),
-            ("virtualbox","VirtualBox detectado em /proc/cpuinfo"),
-            ("qemu",      "QEMU detectado em /proc/cpuinfo"),
-            ("kvm",       "KVM detectado em /proc/cpuinfo"),
-            ("hypervisor","Hypervisor flag detectada em CPU"),
-            ("xen",       "Xen detectado em /proc/cpuinfo"),
-        ]
-        for marker, msg in vm_markers:
-            if marker in cpuinfo:
-                reasons.append(msg)
-    except Exception:
-        pass
-
-    # 2. Verifica DMI/BIOS por strings de VM
-    try:
-        dmi = subprocess.check_output(
-            ["echo", "skip"],
-            stderr=subprocess.DEVNULL, timeout=5
-        ).decode(errors="ignore").lower()
-
-        dmi_markers = [
-            ("vmware",       "VMware em DMI"),
-            ("virtualbox",   "VirtualBox em DMI"),
-            ("qemu",         "QEMU em DMI"),
-            ("microsoft corporation", None),  # pode ser Hyper-V
-            ("innotek",      "VirtualBox (Innotek) em DMI"),
-            ("parallels",    "Parallels em DMI"),
-            ("xen",          "Xen em DMI"),
-        ]
-        for marker, msg in dmi_markers:
-            if marker in dmi and msg:
-                reasons.append(msg)
-
-        # Hyper-V específico
-        if "microsoft corporation" in dmi and "hyper-v" in dmi:
-            reasons.append("Hyper-V em DMI")
-    except Exception:
-        pass
-
-    # 3. Verifica /proc/vz (OpenVZ/Virtuozzo)
-    if os.path.exists("/proc/vz"):
-        reasons.append("OpenVZ/Virtuozzo detectado (/proc/vz)")
-
-    # 4. Verifica WSL (Windows Subsystem for Linux)
-    try:
-        with open("/proc/version") as f:
-            version = f.read().lower()
-        if "microsoft" in version or "wsl" in version:
-            reasons.append("WSL (Windows Subsystem for Linux) detectado")
-    except Exception:
-        pass
-
-    # 5. Verifica Docker/container
-    if os.path.exists("/.dockerenv"):
-        reasons.append("Docker container detectado (/.dockerenv)")
-
-    try:
-        with open("/proc/1/cgroup") as f:
-            cgroup = f.read()
-        if "docker" in cgroup or "lxc" in cgroup or "kubepods" in cgroup:
-            reasons.append("Container (Docker/LXC/K8s) detectado em cgroup")
-    except Exception:
-        pass
-
-    # 6. Verifica systemd-detect-virt
-    try:
-        result = subprocess.check_output(
-            ["systemd-detect-virt"], stderr=subprocess.DEVNULL, timeout=3
-        ).decode().strip()
-        if result and result != "none":
-            reasons.append(f"systemd-detect-virt: {result}")
-    except Exception:
-        pass
-
-    # 7. Verifica número de CPUs: VMs raramente têm > 8 núcleos físicos reais
-    # (heurística fraca, não bloqueia sozinha)
-
-    if reasons:
-        return True, "; ".join(reasons)
-    return False, "ok"
-
-
-# ═══════════════════════════════════════════════════════════
-# FINGERPRINT DE HARDWARE
-# ═══════════════════════════════════════════════════════════
-
-def get_hardware_fingerprint() -> str:
-    """
-    Gera um fingerprint único do hardware físico.
-    Combina: CPU, motherboard, RAM (slots), disco serial.
-    
-    O fingerprint é incluído na prova de RAM, vinculando-a
-    ao hardware específico. Um minerador não pode reutilizar
-    a prova em outro hardware.
-    """
-    components = []
-
-    if platform.system() == "Linux":
-        # CPU info
-        try:
-            cpuinfo = open("/proc/cpuinfo").read()
-            cpu_model = re.search(r"model name\s*:\s*(.+)", cpuinfo)
-            if cpu_model:
-                components.append(f"cpu:{cpu_model.group(1).strip()}")
-        except Exception:
-            pass
-
-        # Motherboard serial + UUID
-        try:
-            board = subprocess.check_output(
-                ["echo", "skip"],
-                stderr=subprocess.DEVNULL, timeout=5
-            ).decode(errors="ignore")
-            serial = re.search(r"Serial Number:\s*(.+)", board)
-            if serial and serial.group(1).strip() not in ("", "None", "To Be Filled By O.E.M."):
-                components.append(f"board:{serial.group(1).strip()}")
-        except Exception:
-            pass
-
-        # System UUID
-        try:
-            sys_info = subprocess.check_output(
-                ["echo", "skip"],
-                stderr=subprocess.DEVNULL, timeout=5
-            ).decode(errors="ignore")
-            uuid = re.search(r"UUID:\s*(.+)", sys_info)
-            if uuid and uuid.group(1).strip() not in ("", "Not Settable", "Not Present"):
-                components.append(f"uuid:{uuid.group(1).strip()}")
-        except Exception:
-            pass
-
-        # RAM: número de slots, localizações
-        try:
-            mem_info = subprocess.check_output(
-                ["echo", "skip"],
-                stderr=subprocess.DEVNULL, timeout=5
-            ).decode(errors="ignore")
-            slots = re.findall(r"Locator:\s*(.+)", mem_info)
-            if slots:
-                components.append(f"ram_slots:{','.join(sorted(slots[:4]))}")
-        except Exception:
-            pass
-
-        # /etc/machine-id (único por instalação Linux)
-        try:
-            machine_id = open("/etc/machine-id").read().strip()
-            if machine_id:
-                components.append(f"mid:{machine_id[:16]}")
-        except Exception:
-            pass
-
-    if not components:
-        # Fallback: usa hostname + plataforma
-        components.append(f"host:{platform.node()}")
-        components.append(f"plat:{platform.machine()}")
-
-    fingerprint_raw = "|".join(components)
-    return hashlib.sha256(fingerprint_raw.encode()).hexdigest()
-
-
-# ═══════════════════════════════════════════════════════════
-# DETECÇÃO DE RAM
-# ═══════════════════════════════════════════════════════════
+    return 32
 
 def detect_ram_type() -> Tuple[str, float]:
-    """
-    Detecta o tipo de RAM instalado via dmidecode.
-    Retorna (tipo, multiplicador).
-    """
     ram_type = "AUTO"
-
     if platform.system() == "Linux":
         try:
             out = subprocess.check_output(
-                ["echo", "skip"],
-                stderr=subprocess.DEVNULL, timeout=5,
+                ["sudo", "dmidecode", "-t", "memory"],
+                stderr=subprocess.DEVNULL, timeout=5
             ).decode(errors="ignore")
-
-            for gen in ["DDR5", "LPDDR5", "LPDDR4", "DDR4", "DDR3", "DDR2"]:
+            for gen in ["DDR5","LPDDR5","LPDDR4","DDR4","LPDDR3","DDR3","DDR2","DDR "]:
                 if gen in out:
-                    ram_type = gen
+                    ram_type = gen.strip()
+                    if ram_type == "DDR": ram_type = "DDR1"
                     break
         except Exception:
             pass
-
     elif platform.system() == "Darwin":
         try:
             out = subprocess.check_output(
-                ["system_profiler", "SPMemoryDataType"],
-                stderr=subprocess.DEVNULL, timeout=5,
+                ["system_profiler","SPMemoryDataType"],
+                stderr=subprocess.DEVNULL, timeout=5
             ).decode(errors="ignore")
-            for gen in ["DDR5", "DDR4", "DDR3", "DDR2", "LPDDR"]:
+            for gen in ["DDR5","DDR4","DDR3","DDR2"]:
                 if gen in out:
                     ram_type = gen
                     break
         except Exception:
             pass
+    return ram_type, RAM_MULTIPLIERS.get(ram_type, 1.0)
 
-    elif platform.system() == "Windows":
-        try:
-            out = subprocess.check_output(
-                ["wmic", "memorychip", "get", "SMBIOSMemoryType"],
-                stderr=subprocess.DEVNULL, timeout=5,
-            ).decode(errors="ignore")
-            type_map = {"20": "DDR2", "24": "DDR3", "26": "DDR4", "34": "DDR5"}
-            for code, name in type_map.items():
-                if code in out:
-                    ram_type = name
-                    break
-        except Exception:
-            pass
+def detect_physical_ram_gb() -> float:
+    try:
+        with open("/proc/meminfo") as f:
+            for line in f:
+                if line.startswith("MemTotal:"):
+                    return int(line.split()[1]) / 1_048_576
+    except Exception:
+        pass
+    return 0.0
 
-    mult = RAM_MULTIPLIERS.get(ram_type, 1.0)
-    return ram_type, mult
-
-
-def validate_ram_type_vs_latency(ram_type: str, latency: float) -> Tuple[bool, str]:
-    """
-    Valida se a latência medida é fisicamente plausível para o tipo de RAM declarado.
-    
-    Um minerador que falsifica o tipo de RAM (ex: declara DDR2 mas tem DDR4)
-    terá latência muito menor que o esperado para DDR2.
-    
-    Retorna (valid, reason).
-    """
-    if ram_type == "AUTO":
-        return True, "ok"  # sem validação se AUTO
-
-    lo, hi = RAM_LATENCY_RANGES.get(ram_type, (0.1, 60.0))
-
-    # Tolerância de 50% para baixo (hardware pode ser melhor que o esperado)
-    # e 3x para cima (hardware muito degradado/lento)
-    lo_tol = lo * 0.5
-    hi_tol = hi * 3.0
-
-    if latency < lo_tol:
-        return False, (
-            f"Latência {latency:.3f}s muito BAIXA para {ram_type} "
-            f"(esperado >{lo_tol:.3f}s) — possível falsificação de tipo de RAM"
-        )
-
-    if latency > hi_tol:
-        return False, (
-            f"Latência {latency:.3f}s muito ALTA para {ram_type} "
-            f"(esperado <{hi_tol:.3f}s) — hardware anormal"
-        )
-
-    return True, "ok"
-
-
-# ═══════════════════════════════════════════════════════════
-# BUFFER
-# ═══════════════════════════════════════════════════════════
-
-_buffer:      Optional[bytearray] = None
-_buffer_size: int                  = 0
-
+_buffer: Optional[bytearray] = None
+_buffer_size: int = 0
 
 def init_buffer(size_mb: int = 256) -> bytearray:
-    """
-    Inicializa o buffer de RAM com bytes aleatórios reais.
-    Bytes aleatórios forçam alocação de páginas físicas (anti zero-page collapse).
-    """
     global _buffer, _buffer_size
-
-    size = size_mb * 1024 * 1024
-    print(f"[PoLM RAM] Alocando {size_mb} MB de buffer... ", end="", flush=True)
+    l3_mb   = detect_l3_cache_mb()
+    size_mb = max(size_mb, l3_mb * 2, MIN_BUFFER_MB)
+    size    = size_mb * 1024 * 1024
+    print(f"[PoLM RAM] Alocando {size_mb} MB de buffer (L3={l3_mb}MB)... ", end="", flush=True)
     t0 = time.perf_counter()
-
     seed_size  = min(size, 4 * 1024 * 1024)
     seed_bytes = os.urandom(seed_size)
-
     buf   = bytearray(size)
     chunk = len(seed_bytes)
     for offset in range(0, size, chunk):
@@ -371,13 +108,16 @@ def init_buffer(size_mb: int = 256) -> bytearray:
             seed_bytes + offset.to_bytes(8, "big")
         ).digest() * (chunk // 32 + 1)
         buf[offset:end] = block[:end - offset]
-
-    elapsed      = time.perf_counter() - t0
-    _buffer      = buf
-    _buffer_size = size
+    # Força alocação física — page touch em todas as páginas
+    total = 0
+    for i in range(0, size, 4096):
+        total ^= buf[i]
+    if total == 0: buf[0] = 1
+    elapsed = time.perf_counter() - t0
     print(f"OK ({elapsed:.2f}s)")
+    _buffer = buf
+    _buffer_size = size
     return buf
-
 
 def get_buffer() -> bytearray:
     global _buffer
@@ -385,43 +125,27 @@ def get_buffer() -> bytearray:
         _buffer = init_buffer(256)
     return _buffer
 
-
-# ═══════════════════════════════════════════════════════════
-# MEMORY STORM — PROVA DE LATÊNCIA
-# ═══════════════════════════════════════════════════════════
-
 def memory_storm(seed: int, buf: Optional[bytearray] = None) -> Tuple[int, float]:
-    """
-    Prova de latência de RAM — acesso não-sequencial com checksum encadeado.
-    
-    Anti-otimização:
-    • Acesso não-sequencial → invalida L1/L2/L3 cache
-    • Stride variável → impossível pré-buscar (hardware prefetcher ineficaz)
-    • Checksum encadeado → cada leitura depende da anterior (sem paralelismo)
-    • Buffer 256MB → não cabe em cache L3 (tipicamente < 64MB)
-    """
+    """Prova de latência — acesso não-sequencial com stride variável."""
     if buf is None:
         buf = get_buffer()
-
-    size   = len(buf)
-    mask   = size - 1
-
+    size = len(buf)
     if size & (size - 1) != 0:
-        ptr    = seed % size
-        total  = 0
+        ptr = seed % size
+        total = 0
         stride = (seed >> 8) | 1
-        t0     = time.perf_counter()
+        t0 = time.perf_counter()
         for i in range(GRAPH_SIZE):
             ptr    = (ptr * 1_103_515_245 + 12_345 + stride) % size
             total ^= buf[ptr]
             if (i & 0xFFF) == 0:
                 stride = ((total * 6_364_136_223_846_793_005 + 1) % size) | 1
         return total, time.perf_counter() - t0
-
+    mask   = size - 1
     ptr    = seed & mask
     total  = 0
     stride = (seed >> 8) | 1
-    t0     = time.perf_counter()
+    t0 = time.perf_counter()
     for i in range(GRAPH_SIZE):
         ptr    = (ptr * 1_103_515_245 + 12_345 + stride) & mask
         total ^= buf[ptr]
@@ -429,15 +153,85 @@ def memory_storm(seed: int, buf: Optional[bytearray] = None) -> Tuple[int, float
             stride = ((total * 6_364_136_223_846_793_005 + 1) & mask) | 1
     return total, time.perf_counter() - t0
 
+def _check_page_fault_pattern(buf: bytearray) -> float:
+    """
+    Mede ratio primeira/segunda passagem.
+    RAM física: primeira passagem mais lenta (page faults reais).
+    RAM virtual: ambas iguais (suspeito).
+    """
+    size = len(buf)
+    step = max(4096, size // 1000)
+    total = 0
+    t0 = time.perf_counter()
+    for i in range(0, size, step): total ^= buf[i]
+    t1 = time.perf_counter()
+    for i in range(0, size, step): total ^= buf[i]
+    t2 = time.perf_counter()
+    first  = t1 - t0
+    second = t2 - t1
+    if second < 0.0001: return 1.0
+    return first / second
 
-def _compute_score(latency: float, ram_mult: float) -> float:
-    raw = latency * 1000.0 * ram_mult
-    return max(SCORE_MIN, min(SCORE_MAX, raw))
+def _check_thermal(buf: bytearray) -> Tuple[float, float]:
+    """
+    RAM física aquece e fica 5-15% mais lenta.
+    RAM virtual mantém latência constante.
+    """
+    seed  = random.randint(0, 2**32)
+    times = []
+    for i in range(3):
+        _, lat = memory_storm(seed + i, buf)
+        times.append(lat)
+    return times[0], sum(times[1:]) / 2
 
+def _check_variance(latencies: list) -> float:
+    """Coeficiente de variação — RAM física tem CV entre 2-30%."""
+    if not latencies: return 0.0
+    mean = sum(latencies) / len(latencies)
+    if mean == 0: return 0.0
+    var = sum((x - mean)**2 for x in latencies) / len(latencies)
+    return (var ** 0.5) / mean
 
-# ═══════════════════════════════════════════════════════════
-# PROVA COMPLETA (com anti-trapaça)
-# ═══════════════════════════════════════════════════════════
+def _check_swap() -> Tuple[bool, str]:
+    """Detecta swap/zRAM ativo."""
+    try:
+        with open("/proc/meminfo") as f:
+            info = {}
+            for line in f:
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    info[k.strip()] = v.strip()
+        swap_total = int(info.get("SwapTotal", "0 kB").split()[0])
+        swap_free  = int(info.get("SwapFree",  "0 kB").split()[0])
+        swap_used  = swap_total - swap_free
+        if swap_used > 512 * 1024:
+            return True, f"swap em uso: {swap_used//1024}MB"
+    except Exception:
+        pass
+    return False, "ok"
+
+def _physical_confidence(latencies, cold, hot, pf_ratio) -> float:
+    """Score de confiança de RAM física (0.0 a 1.0)."""
+    score = 1.0
+    cv = _check_variance(latencies)
+    # Penaliza variância muito baixa (RAM virtual uniforme)
+    if cv < MIN_VARIANCE:
+        score *= max(0.3, cv / MIN_VARIANCE)
+    # Penaliza variância muito alta (swap)
+    if cv > MAX_VARIANCE:
+        score *= max(0.1, 1.0 - (cv - MAX_VARIANCE))
+    # Thermal fingerprint
+    thermal = hot / max(cold, 0.0001)
+    if 1.03 <= thermal <= 1.40:
+        score = min(1.0, score * 1.1)   # bônus: aqueceu normalmente
+    elif thermal < 1.01:
+        score *= 0.7                     # suspeito: não aqueceu
+    # Page fault ratio
+    if pf_ratio >= 1.15:
+        score = min(1.0, score * 1.05)
+    elif pf_ratio < 1.05:
+        score *= 0.8
+    return max(0.1, min(1.0, score))
 
 def compute_ram_proof(
     seed: int,
@@ -445,142 +239,134 @@ def compute_ram_proof(
     buf: Optional[bytearray] = None,
     ram_type: str = "AUTO",
     block_hash: str = "",
+    height: int = 0,
+    cpu_cores: int = 0,
 ) -> dict:
     """
-    Executa a prova de RAM completa com todas as proteções.
-    
-    Proteções incluídas:
-    1. Detecção de VM — rejeita se virtualizado
-    2. Fingerprint de hardware — vincula prova ao hardware físico
-    3. Seed derivado do bloco — impede replay de provas antigas
-    4. Validação de latência vs tipo de RAM — detecta falsificação
+    Prova de RAM física com anti-trapaça completo.
+    Score = RAM_latency × RAM_mult × CPU_mult × confidence_física
     """
-    # 1. Anti-VM
-    is_vm, vm_reason = detect_virtualization()
-    if is_vm:
-        _log_cheat(f"VM detectada: {vm_reason}")
-        raise RuntimeError(
-            f"PoLM não pode rodar em ambiente virtualizado: {vm_reason}\n"
-            f"Use hardware físico real para minerar PoLM."
-        )
+    from polm_core import get_ram_multiplier, get_cpu_multiplier, detect_cpu_cores
 
-    # 2. Fingerprint de hardware
-    hw_fingerprint = get_hardware_fingerprint()
-
-    # 3. Seed seguro: combina seed do bloco + fingerprint
-    #    Impede que um minerador reutilize uma prova em hardware diferente
-    safe_seed = int(hashlib.sha256(
-        f"{seed}|{hw_fingerprint}|{block_hash}".encode()
-    ).hexdigest()[:16], 16)
-
-    # 4. Executa prova
-    work, latency = memory_storm(safe_seed, buf)
-    score         = _compute_score(latency, ram_mult)
-
-    # 5. Valida latência vs tipo de RAM declarado
-    valid, reason = validate_ram_type_vs_latency(ram_type, latency)
-    if not valid:
-        _log_cheat(f"Latência suspeita: {reason} | hw={hw_fingerprint[:16]}")
-        # Penaliza: usa mult=1.0 independente do que foi declarado
-        ram_mult = 1.0
-        score    = _compute_score(latency, ram_mult)
-
-    return {
-        "seed":            seed,
-        "safe_seed":       safe_seed,
-        "work":            work,
-        "latency":         round(latency, 6),
-        "score":           round(score, 4),
-        "ram_mult":        round(ram_mult, 2),
-        "ram_type":        ram_type,
-        "hw_fingerprint":  hw_fingerprint[:32],  # primeiros 32 chars do hash
-        "latency_valid":   valid,
-    }
-
-
-# ═══════════════════════════════════════════════════════════
-# VERIFICAÇÃO DE PROVA
-# ═══════════════════════════════════════════════════════════
-
-def verify_ram_proof(proof: dict, buf: Optional[bytearray] = None) -> Tuple[bool, str]:
-    """
-    Verificação completa da prova (re-executa memory_storm).
-    Usado por peers ao receber um bloco.
-    """
     if buf is None:
         buf = get_buffer()
 
-    safe_seed = proof.get("safe_seed")
-    if safe_seed is None:
-        # Compatibilidade com provas antigas (sem safe_seed)
-        safe_seed = proof.get("seed")
-    if safe_seed is None:
-        return False, "seed ausente"
+    # Multiplicador de RAM pela época
+    if height > 0:
+        try:
+            mult, allowed = get_ram_multiplier(ram_type, height)
+            if allowed: ram_mult = mult
+        except Exception:
+            pass
 
-    work_expected, latency_actual = memory_storm(safe_seed, buf)
+    # Multiplicador de CPU
+    if cpu_cores <= 0:
+        cpu_cores = detect_cpu_cores()
+    cpu_mult, _ = get_cpu_multiplier(cpu_cores, height)
 
-    if proof.get("work") != work_expected:
-        return False, f"work inválido: {proof.get('work')} ≠ {work_expected}"
+    # Fase 1: Aquecimento térmico
+    cold_lat, hot_lat = _check_thermal(buf)
 
-    latency_reported = proof.get("latency", 0)
-    if abs(latency_reported - latency_actual) > latency_actual * 0.25 + 0.1:
-        return False, (
-            f"latência suspeita: reportada={latency_reported:.4f}s, "
-            f"medida={latency_actual:.4f}s"
-        )
+    # Fase 2: Detecta swap
+    has_swap, swap_reason = _check_swap()
 
-    # Valida coerência do score
-    ram_mult = proof.get("ram_mult", 1.0)
-    expected_score = _compute_score(latency_actual, ram_mult)
-    if abs(proof.get("score", 0) - expected_score) > 2.0:
-        return False, "score inconsistente com latência medida"
+    # Fase 3: Page fault pattern
+    pf_ratio = _check_page_fault_pattern(buf)
 
+    # Fase 4: Multi-round com seeds vinculados ao bloco
+    seeds     = []
+    latencies = []
+    checksums = []
+    for i in range(NUM_ROUNDS):
+        h = hashlib.sha256(f"{seed}:{block_hash}:{i}".encode()).digest()
+        s = int.from_bytes(h[:4], "big")
+        seeds.append(s)
+        work, lat = memory_storm(s, buf)
+        latencies.append(lat)
+        checksums.append(work)
+
+    # Fase 5: Confiança física
+    confidence = _physical_confidence(latencies, cold_lat, hot_lat, pf_ratio)
+    if has_swap:
+        confidence *= 0.3   # penalidade severa por swap
+
+    # Fase 6: Score final
+    avg_lat     = sum(latencies) / len(latencies)
+    raw_score   = max(SCORE_MIN, min(SCORE_MAX, avg_lat * 1000.0 * ram_mult))
+    final_score = max(SCORE_MIN, min(SCORE_MAX, raw_score * confidence * cpu_mult))
+
+    combined = checksums[0]
+    for c in checksums[1:]: combined ^= c
+
+    return {
+        "seed":             seed,
+        "seeds":            seeds,
+        "work":             combined,
+        "latency":          round(avg_lat, 6),
+        "latencies":        [round(l, 6) for l in latencies],
+        "variance":         round(_check_variance(latencies), 4),
+        "cold_latency":     round(cold_lat, 6),
+        "hot_latency":      round(hot_lat, 6),
+        "thermal_ratio":    round(hot_lat / max(cold_lat, 0.0001), 4),
+        "page_fault_ratio": round(pf_ratio, 4),
+        "confidence":       round(confidence, 4),
+        "score":            round(final_score, 4),
+        "ram_score":        round(raw_score, 4),
+        "ram_mult":         round(ram_mult, 2),
+        "cpu_mult":         round(cpu_mult, 2),
+        "cpu_cores":        cpu_cores,
+        "ram_type":         ram_type,
+        "physical_ram_gb":  round(detect_physical_ram_gb(), 1),
+        "is_suspicious":    has_swap,
+        "suspicious_reason": swap_reason if has_swap else "",
+    }
+
+def verify_ram_proof(proof: dict, buf: Optional[bytearray] = None) -> Tuple[bool, str]:
+    """Verificação completa — re-executa memory_storm e verifica checksums."""
+    if buf is None:
+        buf = get_buffer()
+    seeds = proof.get("seeds", [proof.get("seed")])
+    checksums = []
+    for s in seeds:
+        if s is None: return False, "seed ausente"
+        work, _ = memory_storm(s, buf)
+        checksums.append(work)
+    combined = checksums[0]
+    for c in checksums[1:]: combined ^= c
+    if proof.get("work") != combined:
+        return False, "checksum inválido"
+    if proof.get("confidence", 1.0) < 0.3:
+        return False, f"confiança RAM física baixa: {proof.get('confidence')}"
+    if proof.get("variance", 0) > MAX_VARIANCE:
+        return False, f"variância suspeita: {proof.get('variance')}"
     return True, "ok"
-
 
 def verify_ram_proof_fast(proof: dict) -> Tuple[bool, str]:
-    """
-    Verificação rápida sem re-executar memory_storm.
-    Checa plausibilidade dos valores.
-    """
-    latency  = proof.get("latency", 0)
-    score    = proof.get("score", 0)
-    work     = proof.get("work")
-    seed     = proof.get("seed")
-    ram_type = proof.get("ram_type", "AUTO")
-
-    if seed is None or work is None:
-        return False, "campos obrigatórios ausentes"
-
-    if not (0 < latency < 60):
+    """Verificação rápida — checa plausibilidade dos valores."""
+    latency    = proof.get("latency", 0)
+    score      = proof.get("score", 0)
+    confidence = proof.get("confidence", 1.0)
+    variance   = proof.get("variance", 0)
+    thermal    = proof.get("thermal_ratio", 1.0)
+    if not (0 < latency < 120):
         return False, f"latência implausível: {latency}"
-
     if not (SCORE_MIN <= score <= SCORE_MAX):
         return False, f"score fora do intervalo: {score}"
-
-    # Valida latência vs tipo de RAM
-    valid, reason = validate_ram_type_vs_latency(ram_type, latency)
-    if not valid:
-        return False, reason
-
-    ram_mult       = proof.get("ram_mult", 1.0)
-    expected_score = _compute_score(latency, ram_mult)
-    if abs(score - expected_score) > 2.0:
-        return False, "score inconsistente com latência"
-
+    if confidence < 0.25:
+        return False, f"confiança insuficiente: {confidence:.2f}"
+    if variance > MAX_VARIANCE:
+        return False, f"variância suspeita: {variance:.3f}"
+    if thermal < 0.95:
+        return False, f"thermal ratio suspeito: {thermal:.3f}"
     return True, "ok"
 
-
 def benchmark_ram_speed(size_mb: int = 64) -> float:
-    """Benchmark rápido de latência de RAM para calibração. Retorna MB/s."""
-    size  = size_mb * 1024 * 1024
-    buf   = bytearray(os.urandom(min(size, 4 * 1024 * 1024)))
-    buf   = buf * (size // len(buf) + 1)
-    buf   = bytearray(buf[:size])
-    t0    = time.perf_counter()
+    """Benchmark rápido de latência de RAM."""
+    size = size_mb * 1024 * 1024
+    buf  = bytearray(os.urandom(min(size, 4*1024*1024)))
+    buf  = bytearray((buf * (size//len(buf)+1))[:size])
+    t0   = time.perf_counter()
     total = 0
-    step  = 4096
-    for i in range(0, size, step):
-        total += buf[i]
+    for i in range(0, size, 4096): total += buf[i]
     elapsed = time.perf_counter() - t0
-    return (size / (1024 * 1024)) / max(elapsed, 0.001)
+    return (size / (1024*1024)) / max(elapsed, 0.001)
