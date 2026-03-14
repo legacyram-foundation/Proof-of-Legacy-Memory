@@ -423,12 +423,14 @@ class PoLMNode:
 
         @self.peers.on(MSG_GETBLOCKS)
         def on_getblocks(peer: Peer, payload: dict) -> None:
-            known   = set(payload.get("known", []))
-            to_send = [
-                b for b in self.chain.get_recent_blocks(50)
-                if b["hash"] not in known
+            known      = set(payload.get("known", []))
+            start_height = payload.get("start_height", 0)
+            all_blocks = self.chain.get_recent_blocks(500)
+            to_send    = [
+                b for b in all_blocks
+                if b["hash"] not in known and b["height"] >= start_height
             ]
-            for block in to_send[-20:]:  # máx 20 por vez
+            for block in to_send[:50]:  # 50 por vez
                 peer.send(MSG_BLOCK, {"block": block})
 
         @self.peers.on(MSG_GETPEERS)
