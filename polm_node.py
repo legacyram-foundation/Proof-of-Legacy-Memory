@@ -384,7 +384,7 @@ class PoLMNode:
             peer.send(MSG_GETPEERS, {})
             # Solicita blocos que faltam
             known = [b["hash"] for b in self.chain.get_recent_blocks(10)]
-            peer.send(MSG_GETBLOCKS, {"known": known})
+            peer.send(MSG_GETBLOCKS, {"known": known, "start_height": max(0, self.chain.height - 10)})
 
         @self.peers.on(MSG_VERACK)
         def on_verack(peer: Peer, payload: dict) -> None:
@@ -470,10 +470,12 @@ class PoLMNode:
     # ── Sync inicial ─────────────────────────────────────
 
     def _initial_sync(self) -> None:
-        time.sleep(3)   # aguarda conexões
-        known = [b["hash"] for b in self.chain.get_recent_blocks(10)]
-        for peer in self.peers.connected_peers():
-            peer.send(MSG_GETBLOCKS, {"known": known})
+        time.sleep(5)   # aguarda conexões
+        for _ in range(10):  # tenta 10 vezes para sincronizar completamente
+            known = [b["hash"] for b in self.chain.get_recent_blocks(10)]
+            for peer in self.peers.connected_peers():
+                peer.send(MSG_GETBLOCKS, {"known": known, "start_height": max(0, self.chain.height - 10)})
+            time.sleep(3)
 
     # ── Estatísticas ─────────────────────────────────────
 
