@@ -314,7 +314,7 @@ def _base(title, body, active=""):
       <span>RAM mín: <b>{ei['min_ram_mb']//1024}GB</b></span>
       <span>Próx. época: bloco <b>{next_h:,}</b> (~{mins_left//60}h)</span>
       <span>Dificuldade: <b>{tip.get('difficulty','—')} bits</b></span>
-      <span>Permitido: <b>{', '.join(ei['allowed_ram'])}</b></span>
+      <span>Permitido: <b>{', '.join([r for r in ei['allowed_ram'] if not r.startswith('_')])}</b></span>
     </div>"""
 
     return f"""<!DOCTYPE html>
