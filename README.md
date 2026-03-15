@@ -3,7 +3,7 @@
 > **The first RAM-latency-bound Proof-of-Work consensus algorithm.**  
 > Giving computational relevance back to legacy hardware.
 
-[![Version](https://img.shields.io/badge/version-3.0.0-00e5ff?style=flat-square&labelColor=0d1520)](.)
+[![Version](https://img.shields.io/badge/version-3.1.0-00e5ff?style=flat-square&labelColor=0d1520)](.)
 [![Status](https://img.shields.io/badge/status-testnet-ffb300?style=flat-square&labelColor=0d1520)](.)
 [![Python](https://img.shields.io/badge/python-3.9%2B-00ff88?style=flat-square&labelColor=0d1520)](.)
 [![License](https://img.shields.io/badge/license-MIT-white?style=flat-square&labelColor=0d1520)](LICENSE)
@@ -14,19 +14,21 @@
 
 Most cryptocurrencies reward whoever has the most powerful hardware. PoLM flips this: the bottleneck is **real DRAM latency** — a physical property that cannot be miniaturized, parallelized, or easily optimized with ASICs.
 
-A **Core 2 Duo from 2006 with DDR2** is genuinely competitive against a modern Ryzen with DDR5.
+A **Core 2 Duo from 2006 with DDR2** is genuinely competitive against a modern i5 with DDR4.
 
-### Proven in the real world
+---
 
-On March 15, 2026, a 3-node testnet validated the algorithm with real hardware:
+## Proven in the real world
 
-| Miner | CPU | RAM | Latency | Boost | Blocks |
-|-------|-----|-----|---------|-------|--------|
-| POLM_Aluisio | i5 12th gen | DDR4 | ~1060 ns | 1.00× | 34 |
-| POLM6837… | i5 7th gen | DDR4 | ~1610 ns | 1.00× | 13 |
-| **POLMBE9E…** | **Core 2 Duo** | **DDR2** | **~6746 ns** | **2.20×** | **1** ✅ |
+On March 15, 2026, a 3-node testnet ran for several hours on real hardware:
 
-Block #47 was mined by a Core 2 Duo — proving the concept works on real legacy hardware.
+| Miner | CPU | RAM | Latency | Boost | Blocks | Share |
+|-------|-----|-----|---------|-------|--------|-------|
+| POLM_Aluisio | i5 12th gen, 16t | DDR4 | ~1200 ns | 1.00× (×0.65 pen.) | 330 | 67% |
+| POLM6837… | i5 7th gen, 4t | DDR4 | ~1620 ns | 1.00× | 120 | 24% |
+| **POLMBE9E…** | **Core 2 Duo, 2t** | **DDR2** | **~6700 ns** | **6.00×** | **43** | **9%** |
+
+**Key result**: a 2006 Core 2 Duo with DDR2 mined 43 blocks including 3 consecutive blocks (#488, #489, #490), competing directly against modern hardware.
 
 ---
 
@@ -37,7 +39,7 @@ getwork()
     ↓
 Build Memory DAG (seeded from epoch + prev_hash)
     ↓
-Random Memory Walk (N steps)
+Random Memory Walk (N steps — adaptive per RAM type)
     ├─ Each step: pos = H(prev_hash) % DAG_size
     ├─ Read 32 bytes from DAG[pos]
     ├─ H_new = sha3_256(H_prev ∥ DAG[pos])
@@ -48,23 +50,28 @@ Latency Proof embedded in block header
 submit() → Central node validates + adds to chain
 ```
 
-### Legacy Boost
+---
 
-| RAM Type | Multiplier | Typical Latency |
-|----------|-----------|----------------|
-| DDR2 | **2.20×** | ~6000–8000 ns |
-| DDR3 | **1.60×** | ~1500–3000 ns |
-| DDR4 | 1.00× | ~900–1600 ns |
-| DDR5 | 0.85× | ~500–900 ns |
+## Legacy Boost Multipliers
 
-### Saturation Penalty
+Calibrated from real testnet measurements (March 2026):
+
+| RAM Type | Multiplier | Measured Latency | Walk Steps |
+|----------|-----------|-----------------|-----------|
+| DDR2 | **6.00×** | ~6700–7700 ns | 80 |
+| DDR3 | **2.80×** | ~1500–3000 ns | 150 |
+| DDR4 | 1.00× | ~900–1700 ns | 500 |
+| DDR5 | 0.70× | ~500–900 ns | 700 |
+
+### Saturation Penalty (thread count)
 
 | Threads | Penalty |
 |---------|---------|
-| 1–4 | 1.00× |
-| 5–8 | 0.90× |
-| 9–16 | 0.80× |
-| 17+ | 0.70× |
+| 1–2 | 1.00× |
+| 3–4 | 0.90× |
+| 5–8 | 0.80× |
+| 9–16 | 0.65× |
+| 17+ | 0.50× |
 
 ---
 
@@ -84,7 +91,7 @@ submit() → Central node validates + adds to chain
 └────────┘ └────────┘ └────────┘
 ```
 
-Single file. No complex sync. Miners just call `/getwork`, mine, and `/submit`.
+Single file. No complex sync. Miners call `/getwork`, mine, and `/submit`.
 
 ---
 
@@ -100,37 +107,31 @@ pip install flask
 
 ```bash
 python3 polm.py node
-# Node running at http://0.0.0.0:6060
 ```
 
-### 2. Start miners (any PC on the network)
+### 2. Start miners
 
 ```bash
-# Same machine
-python3 polm.py miner 127.0.0.1 MyMinerName DDR4
-
-# Remote machine
-python3 polm.py miner 192.168.0.103 MyMinerName DDR3
-
-# Syntax
 python3 polm.py miner <NODE_IP> <MINER_ID> <RAM_TYPE>
-# RAM_TYPE: DDR2 | DDR3 | DDR4 | DDR5
+
+# Examples
+python3 polm.py miner 192.168.0.103 MyAddress DDR2
+python3 polm.py miner 192.168.0.103 MyAddress DDR4
 ```
 
-### 3. Check the network
+### 3. Start the explorer
 
 ```bash
-# Node status
-curl http://localhost:6060/
+python3 polm_explorer.py http://NODE_IP:6060 5050
+# Open http://localhost:5050
+```
 
-# Latest blocks
-curl http://localhost:6060/chain?limit=10
+### 4. Run in background
 
-# Miner leaderboard
-curl http://localhost:6060/miners
-
-# Current work
-curl http://localhost:6060/getwork
+```bash
+nohup python3 polm.py node > /tmp/node.log 2>&1 &
+nohup python3 polm.py miner 192.168.0.103 MyAddress DDR4 > /tmp/miner.log 2>&1 &
+nohup python3 polm_explorer.py http://localhost:6060 5050 > /tmp/explorer.log 2>&1 &
 ```
 
 ---
@@ -140,7 +141,7 @@ curl http://localhost:6060/getwork
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/` | GET | Node status and chain summary |
-| `/getwork` | GET | Current mining job (height, prev_hash, difficulty) |
+| `/getwork` | GET | Current mining job |
 | `/submit` | POST | Submit a mined block |
 | `/chain` | GET | List blocks (`?limit=N&offset=N`) |
 | `/block/<height>` | GET | Get block by height |
@@ -164,38 +165,17 @@ curl http://localhost:6060/getwork
 
 ---
 
-## Protocol Security
-
-| Attack | Defense |
-|--------|---------|
-| ASIC | Large DAG + latency-hard — can't compress DRAM physics |
-| GPU | GDDR has higher latency than DDR, neutralizing bandwidth advantage |
-| Cache exploit | Latency < 5ns → block rejected |
-| Fake RAM | Latency measured per-access, embedded in block header |
-| Replay | Each block commits to prev_hash + timestamp + nonce |
-
----
-
-## Economics
-
-Supply schedule (32,000,000 POLM total — tribute to the 32-bit era):
-
-| Period | Reward | Approx Supply |
-|--------|--------|--------------|
-| Year 1–4 | 5.0 POLM | ~21M |
-| Year 5–8 | 2.5 POLM | ~27M |
-| Year 9–12 | 1.25 POLM | ~30M |
-| Year 13+ | 0.625 POLM… | →32M |
-
----
-
 ## Files
 
 ```
-polm.py          ← entire protocol in one file
-README.md        ← this file
-WHITEPAPER.md    ← full technical specification
-LICENSE          ← MIT
+polm.py              ← entire protocol: node + miner in one file
+polm_explorer.py     ← web explorer (retro terminal UI)
+README.md            ← this file
+WHITEPAPER.md        ← full technical specification
+LICENSE              ← MIT
+requirements.txt     ← flask only
+scripts/
+└── deploy_network.sh
 ```
 
 ---
@@ -204,9 +184,9 @@ LICENSE          ← MIT
 
 - [x] v1.0 — Basic PoW with RAM latency measurement
 - [x] v2.0 — Memory DAG + latency proof + legacy boost
-- [x] v3.0 — Pool architecture (central node + remote miners) ✅ **current**
-- [ ] v3.1 — Web explorer
-- [ ] v3.2 — Wallet with ECDSA signatures
+- [x] v3.0 — Pool architecture (central node + remote miners)
+- [x] v3.1 — Web explorer with live leaderboard ✅ **current**
+- [ ] v3.2 — Wallet with ECDSA signatures + transactions
 - [ ] v3.3 — P2P gossip (multiple full nodes)
 - [ ] v4.0 — Mainnet genesis
 
@@ -214,7 +194,7 @@ LICENSE          ← MIT
 
 ## Status
 
-🟡 **Experimental Testnet** — algorithm validated, not production ready.
+🟡 **Experimental Testnet** — algorithm validated on real hardware, not production ready.
 
 ---
 
