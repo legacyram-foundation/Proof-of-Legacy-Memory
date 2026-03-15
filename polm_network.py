@@ -434,11 +434,12 @@ class PeerManager:
 
     # ── Handshake ─────────────────────────────────────────
 
-    def _send_version(self, peer: Peer) -> None:
+    def _send_version(self, peer: Peer, height: int = 0) -> None:
         peer.send(MSG_VERSION, {
             "version":   PROTOCOL_VERSION,
             "port":      self._my_port,
             "timestamp": time.time(),
+            "height":    height,
         })
 
     # ── Broadcast ─────────────────────────────────────────

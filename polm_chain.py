@@ -570,6 +570,13 @@ class Blockchain:
 
         return True, "ok"
 
+    def get_next_difficulty(self) -> int:
+        """Retorna a dificuldade para o próximo bloco."""
+        from polm_core import calculate_next_difficulty
+        recent = self.get_recent_blocks(150)
+        tip    = self._tip or {}
+        return calculate_next_difficulty(recent, tip)
+
     def _chain(self):
         """Compatibilidade com código antigo que acessa _chain diretamente."""
         return self.get_recent_blocks(self._height + 1)
