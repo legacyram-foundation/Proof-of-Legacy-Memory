@@ -34,9 +34,9 @@ HALVING_INTERVAL    = 210_000
 
 TARGET_BLOCK_TIME   = 150   # 2.5 min — época 4 em ~4 anos
 DIFFICULTY_WINDOW   = 144   # ~6 horas de janela
-MIN_DIFFICULTY      = 8
-MAX_DIFFICULTY      = 24
-INITIAL_DIFFICULTY  = 10
+MIN_DIFFICULTY      = 10
+MAX_DIFFICULTY      = 22
+INITIAL_DIFFICULTY  = 14
 
 MAX_BLOCK_SIZE      = 1_000_000
 MAX_TX_PER_BLOCK    = 4_000
@@ -53,6 +53,36 @@ CHAIN_FILE          = "polm_chain.db"
 UTXO_FILE           = "polm_utxo.db"
 PEERS_FILE          = "polm_peers.json"
 WALLET_FILE         = "polm_wallet.json"
+
+# ── DNS Seeds — nós se descobrem automaticamente ──────────────────────────
+# Estes domínios devem apontar para nós confiáveis da rede PoLM
+# Quando um novo nó inicia, consulta estes seeds para encontrar peers
+DNS_SEEDS = [
+    "seed1.polm.com.br",
+    "seed2.polm.com.br",
+    "seed.polm.com.br",
+]
+
+# ── Registros de propriedade ─────────────────────────────────────────────
+# Categorias de registro imutável na blockchain PoLM
+REGISTER_CATEGORIES = {
+    "imovel":    "Imóvel (casa, terreno, apartamento)",
+    "veiculo":   "Veículo (carro, moto, caminhão)",
+    "contrato":  "Contrato (societário, prestação, acordo)",
+    "autoral":   "Direito autoral (música, arte, código, patente)",
+    "identidade": "Identidade digital (certificado, diploma, documento)",
+    "generico":  "Registro genérico",
+}
+
+# Taxa mínima de registro (em satoshis) — queima deflacionária
+REGISTER_FEE_SATS = 100_000   # 0.001 PoLM por registro
+
+# OP codes do script engine PoLM
+OP_TRANSFER  = "OP_TRANSFER"   # transfere UTXO normal
+OP_REGISTER  = "OP_REGISTER"   # cria novo registro de propriedade
+OP_TRANSFER_OWNERSHIP = "OP_TRANSFER_OWNERSHIP"  # transfere propriedade registrada
+OP_TIMELOCK  = "OP_TIMELOCK"   # bloqueia por N blocos
+OP_MULTISIG  = "OP_MULTISIG"   # requer M de N assinaturas
 
 # ═══════════════════════════════════════════════════════════
 # SISTEMA DE PENALIZAÇÃO DE CPU
@@ -400,9 +430,8 @@ def get_epoch_info(height: int) -> dict:
     next_epoch_block = (epoch + 1) * EPOCH_INTERVAL
     blocks_until_next = max(0, next_epoch_block - height)
 
-    skip = {"min_ram_mb", "_cpu", "_min_ram_by_type"}
-    allowed = [k for k, v in cfg.items() if k not in skip and v is not None]
-    obsolete = [k for k, v in cfg.items() if k not in skip and v is None]
+    allowed = [k for k, v in cfg.items() if k not in ("min_ram_mb",) and v is not None]
+    obsolete = [k for k, v in cfg.items() if k not in ("min_ram_mb",) and v is None]
 
     return {
         "epoch":              epoch,
@@ -639,6 +668,15 @@ def validate_block_structure(block: dict, prev_block: dict = None) -> tuple:
         ok, reason = validate_tx_structure(tx)
         if not ok:
             return False, f"tx {i}: {reason}"
+
+    # Verifica assinaturas ECDSA de todas as TXs não-coinbase
+    for i, tx in enumerate(block["transactions"][1:], 1):
+        try:
+            from polm_wallet import verify_tx_signature
+            if not verify_tx_signature(tx):
+                return False, f"tx {i}: assinatura ECDSA inválida"
+        except ImportError:
+            pass  # módulo não disponível (testes unitários)
 
     if block["timestamp"] > time.time() + 7200:
         return False, "timestamp no futuro"

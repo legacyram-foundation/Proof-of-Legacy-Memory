@@ -36,7 +36,6 @@ from collections import defaultdict, deque
 from typing import Callable, Optional
 
 from polm_core import (
-    MAX_PEERS_FROM_MSG,
     NETWORK_MAGIC, DEFAULT_PORT, MAX_PEERS,
     PROTOCOL_VERSION, PEERS_FILE, NETWORK_VERSION,
 )
@@ -223,6 +222,30 @@ class PeerManager:
         ("192.168.0.103", DEFAULT_PORT),
     ]
 
+    @staticmethod
+    def resolve_dns_seeds() -> list[tuple[str, int]]:
+        """
+        Consulta os DNS seeds para descobrir peers automaticamente.
+        Novos mineradores encontram a rede sem configuração manual.
+        """
+        import socket as _socket
+        from polm_core import DNS_SEEDS, DEFAULT_PORT as _PORT
+
+        peers = []
+        for seed in DNS_SEEDS:
+            try:
+                infos = _socket.getaddrinfo(seed, _PORT,
+                                            _socket.AF_INET,
+                                            _socket.SOCK_STREAM)
+                for info in infos:
+                    ip = info[4][0]
+                    if ip not in ("127.0.0.1", "0.0.0.0"):
+                        peers.append((ip, _PORT))
+                        log.info("DNS seed %s → %s", seed, ip)
+            except Exception as e:
+                log.debug("DNS seed %s falhou: %s", seed, e)
+        return peers
+
     def __init__(self, my_port: int = DEFAULT_PORT):
         self._peers:    dict[str, Peer]  = {}   # addr → Peer
         self._banned:   dict[str, float] = {}   # ip → ban_until
@@ -285,13 +308,8 @@ class PeerManager:
 
     # ── Handlers ─────────────────────────────────────────
 
-    def on(self, cmd: str, handler=None):
+    def on(self, cmd: str, handler: Callable) -> None:
         """Registra um handler para um tipo de mensagem."""
-        if handler is None:
-            def decorator(fn):
-                self._handlers[cmd].append(fn)
-                return fn
-            return decorator
         self._handlers[cmd].append(handler)
 
     def _dispatch(self, peer: Peer, cmd: str, payload: dict) -> None:
@@ -346,7 +364,7 @@ class PeerManager:
 
     def _peer_loop(self, peer: Peer) -> None:
         """Loop de leitura de mensagens de um peer."""
-        self._send_version(peer)
+        self._send_version(peer, getattr(self, '_my_height', 0))
 
         while peer.connected:
             msg = peer.recv_message()
@@ -364,8 +382,12 @@ class PeerManager:
 
     def _connect_loop(self) -> None:
         """Tenta conectar a peers conhecidos periodicamente."""
-        # Bootstrap inicial
+        # Bootstrap inicial — IPs fixos + DNS seeds
         for ip, port in self.BOOTSTRAP_PEERS:
+            self.add_peer(ip, port)
+
+        # Resolve DNS seeds para descoberta automática
+        for ip, port in self.resolve_dns_seeds():
             self.add_peer(ip, port)
 
         while True:
@@ -416,6 +438,10 @@ class PeerManager:
 
     # ── Broadcast ─────────────────────────────────────────
 
+    def set_height(self, height: int) -> None:
+        """Atualiza altura local para incluir no handshake."""
+        self._my_height = height
+
     def broadcast_block(self, block: dict) -> int:
         """Propaga um bloco para todos os peers conectados. Retorna contagem."""
         sent = 0
@@ -438,7 +464,7 @@ class PeerManager:
 
     def _save_peers(self) -> None:
         data = [
-            {"ip": p.ip, "port": DEFAULT_PORT, "last_seen": p.last_seen}
+            {"ip": p.ip, "port": p.port, "last_seen": p.last_seen}
             for p in self._peers.values()
             if not self.is_banned(p.ip)
         ]
