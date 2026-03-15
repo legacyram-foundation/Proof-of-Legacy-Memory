@@ -22,7 +22,14 @@ BLOCK_TIME       = 30                    # segundos alvo
 DIFF_WINDOW      = 144                   # blocos para retarget
 EPOCH_BLOCKS     = 100_000
 DAG_MB_BASE      = 4                     # MB em testnet
-WALK_STEPS       = 500                   # testnet (100000 em mainnet)
+WALK_STEPS       = 500                   # testnet DDR4 baseline (100000 em mainnet)
+# Passos adaptativos por tipo de RAM — DDR2 faz menos passos, mais nonces/s
+WALK_STEPS_BY_RAM = {
+    "DDR2": 80,   # rápido — compensa latência alta
+    "DDR3": 150,  # médio
+    "DDR4": 500,  # baseline
+    "DDR5": 700,  # mais pesado — penaliza RAM rápida
+}
 GENESIS_TIME     = 1741000000
 
 # ─────────────────────────────────────────────
@@ -33,17 +40,23 @@ class RAMType(Enum):
     DDR4 = "DDR4"; DDR5 = "DDR5"
     UNKNOWN = "DDR4"
 
+# Boost calibrado para DDR2 ≈ DDR4 (dados reais testnet Mar 2026)
+# DDR2 ~6800ns, DDR4 ~1200ns → ratio ~5.7x compensado pelo boost
 BOOST = {
-    RAMType.DDR2: 2.20, RAMType.DDR3: 1.60,
-    RAMType.DDR4: 1.00, RAMType.DDR5: 0.85,
+    RAMType.DDR2: 6.00, RAMType.DDR3: 2.80,
+    RAMType.DDR4: 1.00, RAMType.DDR5: 0.70,
     RAMType.UNKNOWN: 1.00,
 }
 
+# Penalidade de threads — freia CPUs modernas com muitos cores
+# DDR2 tipicamente tem 2 threads → 1.00x (sem penalidade)
+# DDR4 16 threads → 0.65x
 def sat_penalty(threads: int) -> float:
-    if threads <= 4:  return 1.0
-    if threads <= 8:  return 0.9
-    if threads <= 16: return 0.8
-    return 0.7
+    if threads <= 2:  return 1.00
+    if threads <= 4:  return 0.90
+    if threads <= 8:  return 0.80
+    if threads <= 16: return 0.65
+    return 0.50
 
 # ─────────────────────────────────────────────
 # DAG + MEMORY WALK
@@ -301,7 +314,8 @@ class Miner:
                 seed_hash = hashlib.sha3_256(
                     f"{prev_hash}:{self.miner_id}:{nonce}".encode()
                 ).digest()
-                walk_hash, latency_ns = memory_walk(dag, seed_hash)
+                steps = WALK_STEPS_BY_RAM.get(self.ram_type.value, WALK_STEPS)
+                walk_hash, latency_ns = memory_walk(dag, seed_hash, steps=steps)
 
                 if latency_ns < 5:
                     continue
