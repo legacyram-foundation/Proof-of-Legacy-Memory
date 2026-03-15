@@ -308,9 +308,14 @@ class PeerManager:
 
     # ── Handlers ─────────────────────────────────────────
 
-    def on(self, cmd: str, handler: Callable) -> None:
-        """Registra um handler para um tipo de mensagem."""
-        self._handlers[cmd].append(handler)
+    def on(self, cmd: str, handler: Callable = None) -> Callable:
+        """Registra um handler — funciona como decorator ou chamada direta."""
+        def decorator(fn):
+            self._handlers[cmd].append(fn)
+            return fn
+        if handler is not None:
+            return decorator(handler)
+        return decorator
 
     def _dispatch(self, peer: Peer, cmd: str, payload: dict) -> None:
         for handler in self._handlers.get(cmd, []):
