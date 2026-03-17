@@ -14,21 +14,22 @@
 
 Most cryptocurrencies reward whoever has the most powerful hardware. PoLM flips this: the bottleneck is **real DRAM latency** — a physical property that cannot be miniaturized, parallelized, or easily optimized with ASICs.
 
-A **Core 2 Duo from 2006 with DDR2** is genuinely competitive against a modern i5 with DDR4.
+A **Core 2 Duo from 2006 with DDR2** leads the network against modern i5/i7 machines.
 
 ---
 
 ## Proven in the real world
 
-On March 15, 2026, a 3-node testnet ran for several hours on real hardware:
+Testnet running since March 15, 2026 — **459+ blocks mined across 4 hardware generations:**
 
 | Miner | CPU | RAM | Latency | Boost | Blocks | Share |
 |-------|-----|-----|---------|-------|--------|-------|
-| POLM_Aluisio | i5 12th gen, 16t | DDR4 | ~1200 ns | 1.00× (×0.65 pen.) | 330 | 67% |
-| POLM6837… | i5 7th gen, 4t | DDR4 | ~1620 ns | 1.00× | 120 | 24% |
-| **POLMBE9E…** | **Core 2 Duo, 2t** | **DDR2** | **~6700 ns** | **6.00×** | **43** | **9%** |
+| **POLMBE9E…** | **Core 2 Duo, 2t** | **DDR2** | **~3900 ns** | **10×** | **221** | **48.1%** 🏆 |
+| POLM_Aluisio | i5 12th gen, 16t | DDR4 | ~1089 ns | 1× (0.65 pen.) | 160 | 34.9% |
+| POLM6837… | i5 7th gen, 4t | DDR4 | ~1856 ns | 1× | 50 | 10.9% |
+| POLM_AMD… | AMD, 2t | DDR3 | ~17886 ns | 5× | 28 | 6.1% |
 
-**Key result**: a 2006 Core 2 Duo with DDR2 mined 43 blocks including 3 consecutive blocks (#488, #489, #490), competing directly against modern hardware.
+**Key result**: a 2006 Core 2 Duo with DDR2 leads the network with **48% of all blocks** — beating modern 12th gen Intel with 16 threads.
 
 ---
 
@@ -40,28 +41,28 @@ getwork()
 Build Memory DAG (seeded from epoch + prev_hash)
     ↓
 Random Memory Walk (N steps — adaptive per RAM type)
-    ├─ Each step: pos = H(prev_hash) % DAG_size
-    ├─ Read 32 bytes from DAG[pos]
-    ├─ H_new = sha3_256(H_prev ∥ DAG[pos])
-    └─ Measure access latency (nanoseconds)
+    ├─ pos = sha3(H_prev) % DAG_size
+    ├─ read 32 bytes from DAG[pos]
+    ├─ H_new = sha3(H_prev ∥ DAG[pos])
+    └─ measure latency (nanoseconds)
     ↓
-Latency Proof embedded in block header
+Apply Legacy Boost × Saturation Penalty
     ↓
-submit() → Central node validates + adds to chain
+submit() → validate → add to chain
 ```
 
 ---
 
 ## Legacy Boost Multipliers
 
-Calibrated from real testnet measurements (March 2026):
+Calibrated from real testnet data:
 
 | RAM Type | Multiplier | Measured Latency | Walk Steps |
 |----------|-----------|-----------------|-----------|
-| DDR2 | **6.00×** | ~6700–7700 ns | 80 |
-| DDR3 | **2.80×** | ~1500–3000 ns | 150 |
-| DDR4 | 1.00× | ~900–1700 ns | 500 |
-| DDR5 | 0.70× | ~500–900 ns | 700 |
+| DDR2 | **10×** | ~3700–8000 ns | 80 |
+| DDR3 | **5×** | ~1500–18000 ns | 150 |
+| DDR4 | 1× | ~900–1900 ns | 500 |
+| DDR5 | 0.5× | ~500–900 ns | 700 |
 
 ### Saturation Penalty (thread count)
 
@@ -87,7 +88,7 @@ Calibrated from real testnet measurements (March 2026):
     ▼          ▼          ▼
 ┌────────┐ ┌────────┐ ┌────────┐
 │ Miner  │ │ Miner  │ │ Miner  │  ← any PC on the network
-│ DDR2   │ │ DDR4   │ │ DDR4   │  ← polm.py miner <node_ip> <id> <ram>
+│ DDR2   │ │ DDR4   │ │ DDR3   │  ← polm.py miner <node_ip> <id> <ram>
 └────────┘ └────────┘ └────────┘
 ```
 
@@ -107,6 +108,7 @@ pip install flask
 
 ```bash
 python3 polm.py node
+# Running at http://0.0.0.0:6060
 ```
 
 ### 2. Start miners
@@ -116,6 +118,7 @@ python3 polm.py miner <NODE_IP> <MINER_ID> <RAM_TYPE>
 
 # Examples
 python3 polm.py miner 192.168.0.103 MyAddress DDR2
+python3 polm.py miner 192.168.0.103 MyAddress DDR3
 python3 polm.py miner 192.168.0.103 MyAddress DDR4
 ```
 
@@ -169,7 +172,7 @@ nohup python3 polm_explorer.py http://localhost:6060 5050 > /tmp/explorer.log 2>
 
 ```
 polm.py              ← entire protocol: node + miner in one file
-polm_explorer.py     ← web explorer (retro terminal UI)
+polm_explorer.py     ← web explorer v4.0 (tabs, ranking, podium)
 README.md            ← this file
 WHITEPAPER.md        ← full technical specification
 LICENSE              ← MIT
@@ -185,10 +188,11 @@ scripts/
 - [x] v1.0 — Basic PoW with RAM latency measurement
 - [x] v2.0 — Memory DAG + latency proof + legacy boost
 - [x] v3.0 — Pool architecture (central node + remote miners)
-- [x] v3.1 — Web explorer with live leaderboard ✅ **current**
-- [ ] v3.2 — Wallet with ECDSA signatures + transactions
-- [ ] v3.3 — P2P gossip (multiple full nodes)
-- [ ] v4.0 — Mainnet genesis
+- [x] v3.1 — Web explorer with live leaderboard
+- [x] v4.0 — Explorer with ranking, podium, tabs, protocol docs ✅ **current**
+- [ ] v4.1 — Wallet with ECDSA signatures + transactions
+- [ ] v4.2 — P2P gossip (multiple full nodes)
+- [ ] v5.0 — Mainnet genesis
 
 ---
 
