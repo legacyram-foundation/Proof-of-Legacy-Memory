@@ -1,5 +1,5 @@
 """
-PoLM Explorer v4.0 — Professional Black Edition
+PoLM Explorer v1.2.0 — Professional Black Edition
 Full rankings, live stats, block detail, leaderboard
 """
 from flask import Flask, render_template_string, jsonify, request
@@ -245,7 +245,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
             <div class="bpen" style="color:var(--green)">max legacy</div>
           </div>
           <div class="bc b3">
-            <div class="bt">DDR3</div><div class="bm">8×</div>
+            <div class="bt">DDR3' class='bm'>8×</div>
             <div class="bs">150 steps/nonce</div>
             <div class="bpen" style="color:var(--amber)">legacy bonus</div>
           </div>
@@ -255,9 +255,9 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
             <div class="bpen" style="color:var(--t3)">baseline</div>
           </div>
           <div class="bc b5">
-            <div class="bt">DDR5</div><div class="bm">0.5×</div>
+            <div class="bt">DDR5</div><div class="bm">0×</div>
             <div class="bs">700 steps/nonce</div>
-            <div class="bpen" style="color:var(--t3)">penalized</div>
+            <div class="bpen" style="color:var(--red)">blocked</div>
           </div>
         </div>
       </div>
@@ -368,7 +368,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
         <div class="bpen" style="color:var(--green);margin-top:6px">Max legacy bonus</div>
       </div>
       <div class="bc b3">
-        <div class="bt">DDR3</div><div class="bm">8×</div>
+        <div class="bt">DDR3' class='bm'>8×</div>
         <div class="bs">~1500–3000 ns</div><div class="bs">150 steps/nonce</div>
         <div class="bpen" style="color:var(--amber);margin-top:6px">Strong legacy bonus</div>
       </div>
@@ -378,7 +378,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
         <div class="bpen" style="color:var(--t3);margin-top:6px">Baseline</div>
       </div>
       <div class="bc b5">
-        <div class="bt">DDR5</div><div class="bm">0.5×</div>
+        <div class="bt">DDR5</div><div class="bm">0×</div>
         <div class="bs">~500–900 ns</div><div class="bs">700 steps/nonce</div>
         <div class="bpen" style="color:var(--red);margin-top:6px">Blocked</div>
       </div>
@@ -388,12 +388,12 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
 </div>
 
 <footer>
-  <div class="fl">PoLM v3.1.0 &nbsp;·&nbsp; Proof of Legacy Memory &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Experimental Testnet</div>
-  <div class="fl"><a href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory">github.com/proof-of-legacy/Proof-of-Legacy-Memory</a></div>
+  <div class="fl">PoLM v1.2.0 &nbsp;·&nbsp; Proof of Legacy Memory &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Experimental Testnet</div>
+  <div class="fl"><a href="https://polm.com.br">polm.com.br</a></div>
 </footer>
 
 <script>
-const B={DDR2:10,DDR3:8,DDR4:1,DDR5:0.5};
+const B={DDR2:10,DDR3:5,DDR4:1,DDR5:0};
 const RC={DDR2:'#fb923c',DDR3:'#fbbf24',DDR4:'#22d3ee',DDR5:'#f87171'};
 const POD=['🥇','🥈','🥉'];
 let offset=0, allMiners={}, allSummary={};
@@ -508,7 +508,7 @@ function rNet(s){
   const rows=[
     ['Symbol','POLM'],['Max supply','32,000,000'],['Block time','30 seconds'],
     ['Halving','every ~4 years'],['Retarget','every 144 blocks (±25%)'],
-    ['Hash algo','SHA3-256'],['Version','v3.1.0'],
+    ['Hash algo','SHA3-256'],['Version','v1.2.0'],
   ];
   document.getElementById('ni').innerHTML=rows.map(([k,v])=>
     `<div class="irow"><span class="ik">${k}</span><span class="iv">${v}</span></div>`).join('');
@@ -700,7 +700,7 @@ def create_explorer(node_url="http://localhost:6060", port=5050):
                 return block_detail(b["height"])
         return "Block not found", 404
 
-    print(f"\n[Explorer] PoLM Explorer v4.0 Professional")
+    print(f"\n[Explorer] PoLM Explorer v1.2.0 Professional")
     print(f"[Explorer] Node: {node_url}")
     print(f"[Explorer] http://localhost:{port}\n")
     app.run(host="0.0.0.0", port=port)

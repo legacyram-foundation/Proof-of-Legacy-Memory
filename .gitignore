@@ -1,43 +1,40 @@
-# Python
+# PoLM — gitignore
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-.eggs/
 venv/
 env/
-.venv/
 
-# PoLM chain data
-*.json
-!package.json
+# Chain data (each node has its own)
+chain.json
+txs.json
+*.db
+*.db.tmp
+*.json.tmp
 
-# Wallet keys (NEVER commit)
-*wallet*.json
-*wallet*.key
-miner_addr*.txt
+# Wallet (NEVER commit private keys)
+wallet.json
+*.wallet
 
 # Logs
 *.log
-*.log.*
 /tmp/
+
+# Generated launchers
+start_node.bat
+start_miner.bat
+start_wallet.bat
+start_explorer.bat
+start_all.bat
+polm.bat
+start_node.sh
+start_miner.sh
+start_wallet.sh
+start_explorer.sh
+start_all.sh
+miner_address.txt
 
 # OS
 .DS_Store
 Thumbs.db
-*~
-
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Flask
-instance/
-.webassets-cache
-*.db
+desktop.ini
