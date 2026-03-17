@@ -245,7 +245,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
             <div class="bpen" style="color:var(--green)">max legacy</div>
           </div>
           <div class="bc b3">
-            <div class="bt">DDR3</div><div class="bm">5×</div>
+            <div class="bt">DDR3</div><div class="bm">8×</div>
             <div class="bs">150 steps/nonce</div>
             <div class="bpen" style="color:var(--amber)">legacy bonus</div>
           </div>
@@ -255,9 +255,9 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
             <div class="bpen" style="color:var(--t3)">baseline</div>
           </div>
           <div class="bc b5">
-            <div class="bt">DDR5</div><div class="bm">0×</div>
+            <div class="bt">DDR5</div><div class="bm">0.5×</div>
             <div class="bs">700 steps/nonce</div>
-            <div class="bpen" style="color:var(--red)">blocked</div>
+            <div class="bpen" style="color:var(--t3)">penalized</div>
           </div>
         </div>
       </div>
@@ -368,7 +368,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
         <div class="bpen" style="color:var(--green);margin-top:6px">Max legacy bonus</div>
       </div>
       <div class="bc b3">
-        <div class="bt">DDR3</div><div class="bm">5×</div>
+        <div class="bt">DDR3</div><div class="bm">8×</div>
         <div class="bs">~1500–3000 ns</div><div class="bs">150 steps/nonce</div>
         <div class="bpen" style="color:var(--amber);margin-top:6px">Strong legacy bonus</div>
       </div>
@@ -378,7 +378,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
         <div class="bpen" style="color:var(--t3);margin-top:6px">Baseline</div>
       </div>
       <div class="bc b5">
-        <div class="bt">DDR5</div><div class="bm">0×</div>
+        <div class="bt">DDR5</div><div class="bm">0.5×</div>
         <div class="bs">~500–900 ns</div><div class="bs">700 steps/nonce</div>
         <div class="bpen" style="color:var(--red);margin-top:6px">Blocked</div>
       </div>
@@ -393,7 +393,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;
 </footer>
 
 <script>
-const B={DDR2:10,DDR3:5,DDR4:1,DDR5:0};
+const B={DDR2:10,DDR3:8,DDR4:1,DDR5:0.5};
 const RC={DDR2:'#fb923c',DDR3:'#fbbf24',DDR4:'#22d3ee',DDR5:'#f87171'};
 const POD=['🥇','🥈','🥉'];
 let offset=0, allMiners={}, allSummary={};
