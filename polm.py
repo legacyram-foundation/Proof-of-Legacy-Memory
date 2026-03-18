@@ -61,11 +61,13 @@ EPOCH_BLOCKS        = 100_000
 DAG_BASE_MB         = 256
 DAG_GROWTH_MB       = 64
 WALK_STEPS_MAIN     = 100_000
-GENESIS_TIME        = 1_741_000_000
-FOUNDER_ADDRESS     = "POLMF0UNDER00000000000000000000000"  # set at genesis
+GENESIS_TIME        = 1773793850
+FOUNDER_ADDRESS     = "POLMD872771E5F0017C5B5C08D353B5E7B4B"  # set at genesis
 FOUNDER_TWITTER     = "https://x.com/aluisiofer"
 PROJECT_TWITTER     = "https://x.com/polm2026"
-FOUNDER_LOCK        = 5_256_000       # ~5 years
+FOUNDER_LOCK        = 5_256_000
+GENESIS_MSG         = "Legacy hardware deserves a second life — PoLM Genesis, March 2026, polm.com.br"
+FOUNDER_NAME        = "Aluisio Fernandes (Aluminium)"       # ~5 years
 DEFAULT_PORT        = 6060
 MIN_FEE             = 0.0001
 BASELINE_NS         = 1000.0          # DDR4 reference latency
@@ -484,7 +486,7 @@ class Blockchain:
     def _genesis(self):
         b = Block(
             height=0, prev_hash="0" * 64, timestamp=GENESIS_TIME,
-            nonce=0, miner_id="GENESIS", ram_type="DDR4", threads=1,
+            nonce=0, miner_id="GENESIS — Legacy hardware deserves a second life — PoLM Genesis, March 2026, polm.com.br", ram_type="DDR4", threads=1,
             epoch=0, difficulty=self._diff, latency_ns=0.0,
             mem_proof="0" * 64, score=0.0, reward=INITIAL_REWARD, tx_ids=[]
         )

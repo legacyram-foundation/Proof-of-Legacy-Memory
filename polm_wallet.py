@@ -1,9 +1,6 @@
 """
-PoLM Wallet  v1.2.0
+PoLM Wallet  v2.0.0  —  BIP-39 / HD Wallet
 https://polm.com.br
-
-Founder : @aluisiofer  (https://x.com/aluisiofer)
-Project : @polm2026    (https://x.com/polm2026)
 
 Web Wallet UI: Dashboard · Send · Receive · History · Addresses · Network
 CLI:  show | new | balance | send
@@ -27,7 +24,7 @@ from dataclasses import dataclass, asdict
 from typing import Optional, Dict, List, Tuple
 from flask import Flask, jsonify, request, Response
 
-VERSION = "1.2.0"
+VERSION = "2.0.0"
 SYMBOL  = "POLM"
 WEBSITE = "https://polm.com.br"
 MIN_FEE = 0.0001
@@ -521,8 +518,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;margin-top:6px;
   </div>
   <div class="fl">
     <a href="/explorer" target="_blank">Explorer</a> &nbsp;·&nbsp;
-    <a href="https://polm.com.br" target="_blank">polm.com.br</a> &nbsp;·&nbsp;
-    <a href="https://x.com/polm2026" target="_blank">@polm2026</a>
+    <a href="https://polm.com.br" target="_blank">Website</a>
   </div>
 </footer>
 
