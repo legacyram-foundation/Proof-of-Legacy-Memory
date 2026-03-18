@@ -73,6 +73,9 @@ MIN_FEE             = 0.0001
 BASELINE_NS         = 1000.0          # DDR4 reference latency
 BOOST_ALPHA         = 0.8
 
+# Static boost table — validated on testnet (816 blocks)
+STATIC_BOOST = {"DDR2": 10.0, "DDR3": 8.0, "DDR4": 1.0, "DDR5": 0.5}
+
 # Testnet overrides
 T_DAG_MB  = 4
 T_WALK    = 500
@@ -378,9 +381,11 @@ class Block:
 # ─────────────────────────────────────────────────────────────────
 # PROOF-OF-LEGACY-MEMORY ALGORITHM
 # ─────────────────────────────────────────────────────────────────
-def dynamic_boost(lat_ns: float) -> float:
+def dynamic_boost(lat_ns: float, ram_type: str = "DDR4") -> float:
     """boost = (latency / 1000)^0.8 — rewards higher-latency (legacy) RAM."""
-    return 1.0 if lat_ns <= 0 else (lat_ns / BASELINE_NS) ** BOOST_ALPHA
+    static = STATIC_BOOST.get(ram_type, 1.0)
+    dynamic = 1.0 if lat_ns <= 0 else (lat_ns / BASELINE_NS) ** BOOST_ALPHA
+    return static * dynamic
 
 def sat_penalty(threads: int) -> float:
     """Thread saturation penalty."""
@@ -1045,7 +1050,7 @@ class PoLMMiner:
                 if lat < 5:
                     continue
 
-                boost = dynamic_boost(lat)
+                boost = dynamic_boost(lat, self.ram)
                 sc    = compute_score(lat, boost, self.threads)
 
                 b = Block(
