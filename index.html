@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PoLM — Proof of Legacy Memory</title>
+<meta name="description" content="The first RAM-latency-bound Proof-of-Work. Mine with any DDR2/DDR3/DDR4 hardware. Legacy machines earn more.">
+<meta property="og:title" content="PoLM — Proof of Legacy Memory">
+<meta property="og:description" content="The first RAM-latency-bound PoW. A 2006 Core2Duo with DDR2 mines 52% of blocks.">
+<meta property="og:url" content="https://polm.com.br">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#07080a;--s1:#0d1017;--s2:#131a24;--b1:#1e2a38;--b2:#263346;
+  --cyan:#22d3ee;--cyan2:#0891b2;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --t1:#f0f4f8;--t2:#8ba3bc;--t3:#3d5166;
+  --mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif}
+html{font-size:14px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(7,8,10,.9);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--b1);
+  height:56px;display:flex;align-items:center;padding:0 32px;gap:16px}
+.nav-logo{font-family:var(--mono);font-weight:700;font-size:1rem;color:var(--cyan);
+  letter-spacing:.04em;text-decoration:none}
+.nav-logo em{color:var(--t3);font-style:normal;font-weight:300}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nlink{padding:6px 14px;border-radius:6px;font-size:.78rem;font-weight:500;
+  text-decoration:none;color:var(--t2);transition:all .15s}
+.nlink:hover{color:var(--t1);background:var(--s2)}
+.nlink.cta{background:var(--cyan);color:#000;font-weight:600}
+.nlink.cta:hover{background:var(--cyan2);color:#fff}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:80px 24px 40px;
+  background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(34,211,238,.08) 0%,transparent 60%)}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;
+  border-radius:20px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);
+  color:var(--green);font-family:var(--mono);font-size:.72rem;font-weight:500;margin-bottom:28px}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+h1{font-size:clamp(2.4rem,6vw,4.5rem);font-weight:800;line-height:1.1;
+  margin-bottom:20px;letter-spacing:-.02em}
+h1 span{color:var(--cyan)}
+.hero-sub{font-size:clamp(.9rem,2vw,1.15rem);color:var(--t2);max-width:600px;
+  margin:0 auto 40px;line-height:1.7}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:56px}
+.btn{padding:13px 28px;border-radius:8px;font-size:.9rem;font-weight:600;
+  text-decoration:none;transition:all .15s;border:none;cursor:pointer}
+.btn-p{background:var(--cyan);color:#000}.btn-p:hover{background:var(--cyan2);color:#fff;transform:translateY(-1px)}
+.btn-g{border:1px solid var(--b1);color:var(--t2)}.btn-g:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* LIVE STATS BAR */
+.stats-bar{display:flex;gap:0;background:var(--s1);border:1px solid var(--b1);
+  border-radius:12px;overflow:hidden;max-width:780px;width:100%;margin:0 auto}
+.sb-item{flex:1;padding:16px 20px;text-align:center;border-right:1px solid var(--b1)}
+.sb-item:last-child{border-right:none}
+.sb-label{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;
+  font-family:var(--mono);margin-bottom:5px}
+.sb-value{font-size:1.1rem;font-weight:700;font-family:var(--mono);color:var(--t1)}
+.sb-value.cyan{color:var(--cyan)}
+
+/* PROOF SECTION */
+.proof{padding:80px 24px;max-width:1100px;margin:0 auto}
+.section-label{font-size:.7rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--cyan);font-family:var(--mono);margin-bottom:12px;text-align:center}
+h2{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;text-align:center;
+  margin-bottom:12px;letter-spacing:-.02em}
+.section-sub{text-align:center;color:var(--t2);font-size:.95rem;margin-bottom:48px;max-width:560px;margin-left:auto;margin-right:auto}
+
+/* TESTNET RESULTS TABLE */
+.results-table{width:100%;border-collapse:collapse;margin-bottom:32px}
+.results-table th{text-align:left;padding:10px 16px;font-size:.65rem;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);
+  border-bottom:1px solid var(--b1);font-weight:400}
+.results-table td{padding:14px 16px;border-bottom:1px solid rgba(30,42,56,.4);
+  font-family:var(--mono);font-size:.85rem}
+.results-table tbody tr:hover td{background:rgba(34,211,238,.02)}
+.results-table tbody tr:last-child td{border-bottom:none}
+.winner-row td{background:rgba(251,191,36,.03) !important}
+
+/* BOOST CARDS */
+.boost-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:48px}
+@media(max-width:700px){.boost-grid{grid-template-columns:repeat(2,1fr)}}
+.boost-card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;
+  padding:24px;text-align:center;transition:all .2s;position:relative;overflow:hidden}
+.boost-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:.6}
+.boost-card:hover{transform:translateY(-3px);border-color:var(--b2)}
+.bc-ddr2::after{background:#fb923c}.bc-ddr3::after{background:#fbbf24}
+.bc-ddr4::after{background:var(--cyan)}.bc-ddr5::after{background:#f87171}
+.bc-ram{font-family:var(--mono);font-size:.85rem;font-weight:700;margin-bottom:8px;color:var(--t2)}
+.bc-mult{font-family:var(--mono);font-size:2.5rem;font-weight:700;line-height:1;margin-bottom:6px}
+.bc-ddr2 .bc-mult{color:#fb923c}.bc-ddr3 .bc-mult{color:#fbbf24}
+.bc-ddr4 .bc-mult{color:var(--cyan)}.bc-ddr5 .bc-mult{color:#f87171}
+.bc-desc{font-size:.72rem;color:var(--t3);font-family:var(--mono)}
+.bc-badge{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:12px;
+  font-size:.62rem;font-family:var(--mono);font-weight:600}
+.badge-max{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.badge-ok{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.badge-base{background:rgba(34,211,238,.08);color:var(--cyan);border:1px solid rgba(34,211,238,.15)}
+.badge-pen{background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.15)}
+
+/* HOW IT WORKS */
+.how{background:var(--s1);border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);
+  padding:80px 24px}
+.how-inner{max-width:1100px;margin:0 auto}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+@media(max-width:700px){.steps{grid-template-columns:1fr}}
+.step{padding:24px}
+.step-num{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--cyan);
+  opacity:.3;margin-bottom:12px}
+.step-title{font-size:1rem;font-weight:600;margin-bottom:8px}
+.step-desc{font-size:.85rem;color:var(--t2);line-height:1.7}
+
+/* FORMULA */
+.formula{background:var(--s2);border:1px solid var(--b1);border-radius:12px;
+  padding:24px;margin:32px 0;font-family:var(--mono);text-align:center}
+.formula-main{font-size:1.1rem;color:var(--cyan);margin-bottom:8px}
+.formula-sub{font-size:.78rem;color:var(--t3)}
+
+/* QUICK START */
+.quickstart{padding:80px 24px;max-width:900px;margin:0 auto}
+.code-block{background:var(--s1);border:1px solid var(--b1);border-radius:12px;
+  padding:20px 24px;font-family:var(--mono);font-size:.82rem;
+  overflow-x:auto;margin:12px 0;line-height:1.7}
+.code-block .comment{color:var(--t3)}
+.code-block .cmd{color:var(--cyan)}
+.code-block .arg{color:var(--amber)}
+.code-block .out{color:var(--green)}
+
+/* GITHUB STATS */
+.gh-stats{padding:60px 24px;background:var(--s1);border-top:1px solid var(--b1);border-bottom:1px solid var(--b1)}
+.gh-inner{max-width:1100px;margin:0 auto}
+.gh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:32px}
+.gh-card{background:var(--bg);border:1px solid var(--b1);border-radius:12px;padding:20px;text-align:center}
+.gh-icon{font-size:1.5rem;margin-bottom:8px}
+.gh-val{font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--cyan)}
+.gh-lbl{font-size:.65rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);margin-top:4px}
+
+/* FOOTER */
+footer{padding:40px 32px;border-top:1px solid var(--b1);
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:16px;max-width:100%}
+.footer-logo{font-family:var(--mono);font-weight:700;color:var(--cyan);font-size:.95rem}
+.footer-links{display:flex;gap:16px;flex-wrap:wrap}
+.footer-links a{font-size:.75rem;color:var(--t3);text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:var(--cyan)}
+.footer-copy{font-size:.7rem;color:var(--t3);font-family:var(--mono);width:100%;margin-top:4px}
+
+@media(max-width:600px){
+  .stats-bar{flex-direction:column}
+  .sb-item{border-right:none;border-bottom:1px solid var(--b1)}
+  .sb-item:last-child{border-bottom:none}
+  nav .nav-links{gap:2px}
+  .nlink{padding:6px 10px;font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">PoLM <em>/</em> Mainnet</a>
+  <div class="nav-links">
+    <a class="nlink" href="http://explorer.polm.com.br:5050">Explorer</a>
+    <a class="nlink" href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">GitHub</a>
+    <a class="nlink" href="https://x.com/polm2026" target="_blank">@polm2026</a>
+    <a class="nlink cta" href="http://explorer.polm.com.br:5050">Mine Now</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">🟢 Mainnet Live</div>
+  <h1>Proof of Legacy<br><span>Memory</span></h1>
+  <p class="hero-sub">
+    The first RAM-latency-bound Proof-of-Work.
+    A 2006 Core&nbsp;2&nbsp;Duo with DDR2 mines <strong style="color:var(--cyan)">52% of all blocks</strong> —
+    beating every modern machine on the network.
+  </p>
+  <div class="hero-btns">
+    <a class="btn btn-p" href="http://explorer.polm.com.br:5050">Open Explorer</a>
+    <a class="btn btn-g" href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">View on GitHub</a>
+    <a class="btn btn-g" href="https://x.com/polm2026" target="_blank">@polm2026</a>
+  </div>
+  <div class="stats-bar" id="live-stats">
+    <div class="sb-item"><div class="sb-label">Network</div><div class="sb-value cyan" id="s-net">mainnet</div></div>
+    <div class="sb-item"><div class="sb-label">Height</div><div class="sb-value" id="s-height">—</div></div>
+    <div class="sb-item"><div class="sb-label">Supply</div><div class="sb-value" id="s-supply">—</div></div>
+    <div class="sb-item"><div class="sb-label">Difficulty</div><div class="sb-value" id="s-diff">—</div></div>
+    <div class="sb-item"><div class="sb-label">Next Reward</div><div class="sb-value cyan" id="s-reward">5.0 POLM</div></div>
+  </div>
+</section>
+
+<!-- PROOF SECTION -->
+<section class="proof">
+  <div class="section-label">Testnet validated — 816 blocks</div>
+  <h2>Legacy hardware wins. Provably.</h2>
+  <p class="section-sub">
+    These are real results from our testnet running across 4 hardware generations.
+    Old RAM isn't a disadvantage — it's the algorithm.
+  </p>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Rank</th><th>Hardware</th><th>RAM</th>
+        <th>Latency</th><th>Boost</th><th>Blocks</th><th>Share</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="winner-row">
+        <td style="color:#fbbf24;font-weight:700">🥇 #1</td>
+        <td style="color:#fb923c">Core 2 Duo (2006)</td>
+        <td><span style="background:rgba(249,115,22,.1);color:#fb923c;border:1px solid rgba(249,115,22,.2);padding:2px 8px;border-radius:4px;font-size:.75rem">DDR2</span></td>
+        <td style="color:var(--amber)">~3800 ns</td>
+        <td style="color:#fb923c;font-weight:700">10×</td>
+        <td style="color:var(--cyan)">428</td>
+        <td style="color:var(--green);font-weight:700">52.4% 🏆</td>
+      </tr>
+      <tr>
+        <td style="color:#9ca3af">🥈 #2</td>
+        <td>i5 7th gen 4t</td>
+        <td><span style="background:rgba(34,211,238,.07);color:var(--cyan);border:1px solid rgba(34,211,238,.14);padding:2px 8px;border-radius:4px;font-size:.75rem">DDR4</span></td>
+        <td style="color:var(--amber)">~1741 ns</td>
+        <td style="color:var(--cyan)">1×</td>
+        <td>284</td><td>34.8%</td>
+      </tr>
+      <tr>
+        <td style="color:#cd7f32">🥉 #3</td>
+        <td>AMD 2t</td>
+        <td><span style="background:rgba(245,158,11,.08);color:#fbbf24;border:1px solid rgba(245,158,11,.18);padding:2px 8px;border-radius:4px;font-size:.75rem">DDR3</span></td>
+        <td style="color:var(--amber)">~12988 ns</td>
+        <td style="color:#fbbf24;font-weight:700">8×</td>
+        <td>62</td><td>7.6%</td>
+      </tr>
+      <tr>
+        <td>#4</td>
+        <td>i5 12th gen 16t</td>
+        <td><span style="background:rgba(34,211,238,.07);color:var(--cyan);border:1px solid rgba(34,211,238,.14);padding:2px 8px;border-radius:4px;font-size:.75rem">DDR4</span></td>
+        <td style="color:var(--amber)">~1060 ns</td>
+        <td style="color:var(--t3)">1× (−0.65 pen.)</td>
+        <td>43</td><td>5.3%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="boost-grid">
+    <div class="boost-card bc-ddr2">
+      <div class="bc-ram">DDR2</div>
+      <div class="bc-mult">10×</div>
+      <div class="bc-desc">~3500–8000 ns</div>
+      <div class="bc-badge badge-max">max legacy</div>
+    </div>
+    <div class="boost-card bc-ddr3">
+      <div class="bc-ram">DDR3</div>
+      <div class="bc-mult">8×</div>
+      <div class="bc-desc">~1500–4000 ns</div>
+      <div class="bc-badge badge-ok">legacy bonus</div>
+    </div>
+    <div class="boost-card bc-ddr4">
+      <div class="bc-ram">DDR4</div>
+      <div class="bc-mult">1×</div>
+      <div class="bc-desc">~900–1900 ns</div>
+      <div class="bc-badge badge-base">baseline</div>
+    </div>
+    <div class="boost-card bc-ddr5">
+      <div class="bc-ram">DDR5</div>
+      <div class="bc-mult">0.5×</div>
+      <div class="bc-desc">~500–900 ns</div>
+      <div class="bc-badge badge-pen">penalized</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+<div class="how-inner">
+  <div class="section-label" style="text-align:center">Algorithm</div>
+  <h2 style="text-align:center">How PoLM works</h2>
+  <div class="formula">
+    <div class="formula-main">score = (1 / latency_ns) × boost × thread_penalty</div>
+    <div class="formula-sub">boost = (latency_ns / 1000)^0.8 &nbsp;·&nbsp; DDR2 at 3800ns → ~11× effective boost</div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Build the Memory DAG</div>
+      <div class="step-desc">Each mining epoch seeds a 256 MB pseudorandom buffer from the chain state. It defeats CPU cache entirely — every access is a real DRAM read.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">Random memory walk</div>
+      <div class="step-desc">100,000 sequential steps, each depending on the last. Cannot be parallelized. The bottleneck is purely DRAM latency — physics, not software.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Legacy hardware wins</div>
+      <div class="step-desc">Higher latency = higher boost. DDR2 at ~3800ns gets ~10× while DDR4 at ~1060ns gets ~1×. The gap between generations: ~2.5× — vs 100× in SHA-256.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- QUICK START -->
+<section class="quickstart">
+  <div class="section-label" style="text-align:center">Get started</div>
+  <h2 style="text-align:center;margin-bottom:32px">Start mining in 3 commands</h2>
+
+  <p style="color:var(--t3);font-family:var(--mono);font-size:.75rem;margin-bottom:8px"># Linux / macOS</p>
+  <div class="code-block">
+    <span class="comment"># Clone and install</span><br>
+    <span class="cmd">git clone</span> <span class="arg">https://github.com/proof-of-legacy/Proof-of-Legacy-Memory.git</span><br>
+    <span class="cmd">cd</span> Proof-of-Legacy-Memory <span class="cmd">&&</span> <span class="cmd">bash</span> scripts/install.sh<br><br>
+    <span class="comment"># Start mining (auto-detects your RAM type)</span><br>
+    <span class="cmd">python3</span> polm.py <span class="arg">miner</span> http://node1.polm.com.br:6060 <span class="arg">YOUR_ADDRESS DDR2</span><br><br>
+    <span class="out">[Miner] #1  diff=4  reward=5.0 POLM  DAG=256MB  DDR2</span><br>
+    <span class="out">[Miner] Block #1 found!  Boost: 10.8×  Status: ACCEPTED</span>
+  </div>
+
+  <p style="color:var(--t3);font-family:var(--mono);font-size:.75rem;margin-bottom:8px;margin-top:16px"># Windows</p>
+  <div class="code-block">
+    <span class="comment">:: 1. Install Python 3.9+ from python.org (check "Add to PATH")</span><br>
+    <span class="comment">:: 2. Double-click: scripts\install.bat</span><br>
+    <span class="comment">:: 3. Double-click: start_all.bat</span><br><br>
+    <span class="out">Browser opens → http://localhost:7070 (Wallet UI)</span>
+  </div>
+
+  <div style="text-align:center;margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a class="btn btn-p" href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">View on GitHub</a>
+    <a class="btn btn-g" href="http://explorer.polm.com.br:5050">Open Explorer</a>
+    <a class="btn btn-g" href="http://node1.polm.com.br:6060" target="_blank">Node API</a>
+  </div>
+</section>
+
+<!-- GITHUB STATS -->
+<section class="gh-stats">
+<div class="gh-inner">
+  <div class="section-label" style="text-align:center">Project</div>
+  <h2 style="text-align:center;margin-bottom:8px">Open source · MIT License</h2>
+  <p style="text-align:center;color:var(--t2);font-size:.88rem;margin-bottom:0">
+    github.com/proof-of-legacy/Proof-of-Legacy-Memory
+  </p>
+  <div class="gh-grid" id="gh-grid">
+    <div class="gh-card"><div class="gh-icon">⛓</div><div class="gh-val cyan" id="s-height2">0</div><div class="gh-lbl">Blocks mined</div></div>
+    <div class="gh-card"><div class="gh-icon">💎</div><div class="gh-val" id="s-supply2">0</div><div class="gh-lbl">POLM in circulation</div></div>
+    <div class="gh-card"><div class="gh-icon">⚡</div><div class="gh-val">4</div><div class="gh-lbl">RAM generations</div></div>
+    <div class="gh-card"><div class="gh-icon">🔒</div><div class="gh-val">SHA3-256</div><div class="gh-lbl">Hash algorithm</div></div>
+    <div class="gh-card"><div class="gh-icon">🎯</div><div class="gh-val">32M</div><div class="gh-lbl">Max supply POLM</div></div>
+    <div class="gh-card"><div class="gh-icon">⏱</div><div class="gh-val">30s</div><div class="gh-lbl">Block time</div></div>
+  </div>
+</div>
+</section>
+
+<footer>
+  <div class="footer-logo">PoLM</div>
+  <div class="footer-links">
+    <a href="http://explorer.polm.com.br:5050">Explorer</a>
+    <a href="http://node1.polm.com.br:6060" target="_blank">Node API</a>
+    <a href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">GitHub</a>
+    <a href="https://x.com/polm2026" target="_blank">@polm2026</a>
+    <a href="https://x.com/aluisiofer" target="_blank">@aluisiofer</a>
+  </div>
+  <div class="footer-copy">
+    © 2026 Aluísio Fernandes (Aluminium) · MIT License · Experimental Mainnet · Not financial advice
+  </div>
+</footer>
+
+<script>
+async function loadStats(){
+  try{
+    const d=await fetch('http://node1.polm.com.br:6060/').then(r=>r.json());
+    document.getElementById('s-height').textContent=Number(d.height||0).toLocaleString('en');
+    document.getElementById('s-supply').textContent=Number(d.total_supply||0).toLocaleString('en',{maximumFractionDigits:0})+' POLM';
+    document.getElementById('s-diff').textContent=d.difficulty||4;
+    document.getElementById('s-reward').textContent=(d.next_reward||5.0).toFixed(2)+' POLM';
+    document.getElementById('s-height2').textContent=Number(d.height||0).toLocaleString('en');
+    document.getElementById('s-supply2').textContent=Number(d.total_supply||0).toLocaleString('en',{maximumFractionDigits:0});
+    document.getElementById('s-net').textContent=d.network||'mainnet';
+  }catch(e){}
+}
+loadStats();
+setInterval(loadStats,15000);
+</script>
+</body>
+</html>
