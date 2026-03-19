@@ -288,10 +288,10 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
     <div class="st">Thread saturation penalty</div>
     <div class="pen-grid">
       <div class="pen-card"><div class="pen-t">1–2 threads</div><div class="pen-v">1.00×</div></div>
-      <div class="pen-card"><div class="pen-t">3–4 threads</div><div class="pen-v">0.90×</div></div>
-      <div class="pen-card"><div class="pen-t">5–8 threads</div><div class="pen-v">0.80×</div></div>
-      <div class="pen-card"><div class="pen-t">9–16 threads</div><div class="pen-v">0.65×</div></div>
-      <div class="pen-card"><div class="pen-t">17+ threads</div><div class="pen-v">0.50×</div></div>
+      <div class="pen-card"><div class="pen-t">3–4 threads</div><div class="pen-v">0.75×</div></div>
+      <div class="pen-card"><div class="pen-t">5–8 threads</div><div class="pen-v">0.50×</div></div>
+      <div class="pen-card"><div class="pen-t">9–16 threads</div><div class="pen-v">0.25×</div></div>
+      <div class="pen-card"><div class="pen-t">17+ threads</div><div class="pen-v">0.10×</div></div>
     </div>
   </div>
 </div>
@@ -344,7 +344,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
     <div class="st">Halving schedule</div>
     <table><thead><tr><th>Period</th><th>Height range</th><th>Reward</th><th>Year</th><th>RAM / DAG</th></tr></thead>
     <tbody>
-      <tr><td style="color:var(--cyan)">1</td><td>0 – 2,099,999</td><td style="color:var(--green)">5.0 POLM</td><td>Year 0–2</td><td>DAG 256MB · DDR2=12× · min 4GB</td></tr>
+      <tr><td style="color:var(--cyan)">1</td><td>0 – 2,099,999</td><td style="color:var(--green)">50.0 POLM</td><td>Year 0–2</td><td>DAG 256MB · DDR2=12× · min 4GB</td></tr>
       <tr><td>2</td><td>2.1M – 4.2M</td><td>2.5 POLM</td><td>Year 2–4</td><td>DAG 512MB · DDR4=4× · min 8GB</td></tr>
       <tr><td>3</td><td>4.2M – 6.3M</td><td>1.25 POLM</td><td>Year 4–6</td><td>DAG 1GB · DDR4=6× · min 16GB</td></tr>
       <tr><td>4</td><td>6.3M – 8.4M</td><td>0.625 POLM</td><td>Year 6–8</td><td>DAG 2GB · DDR5=6× · min 32GB</td></tr>
@@ -366,7 +366,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
 </div>
 
 <footer>
-  <div class="fl">PoLM Explorer v2.0.0 &nbsp;·&nbsp; <a href="https://polm.com.br">polm.com.br</a> &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Mainnet</div>
+  <div class="fl">PoLM Explorer v2.1.0 &nbsp;·&nbsp; <a href="https://polm.com.br">polm.com.br</a> &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Mainnet</div>
   <div class="fl"><a href="https://x.com/polm2026" target="_blank">@polm2026</a> &nbsp;·&nbsp; <a href="https://x.com/aluisiofer" target="_blank">@aluisiofer</a> &nbsp;·&nbsp; <a href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">GitHub</a></div>
 </footer>
 
