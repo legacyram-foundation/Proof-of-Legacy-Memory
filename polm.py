@@ -1163,13 +1163,7 @@ class PoLMNode:
         print(f"  Rule : 1 IP = 1 miner  (anti-multimine)")
         print()
         # Bootstrap P2P network
-        self.p2p.bootstrap()
-        # Announce ourselves to the network in background
-        threading.Thread(
-            target=self.p2p.announce,
-            args=(self.port,),
-            daemon=True
-        ).start()
+        threading.Thread(target=self.p2p.bootstrap, daemon=True).start()
         self.app.run(
             host="0.0.0.0", port=self.port,
             debug=False, use_reloader=False, threaded=True
