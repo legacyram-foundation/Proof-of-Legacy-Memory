@@ -99,7 +99,7 @@ GENESIS_TIME        = 1773881445
 FOUNDER_ADDRESS     = "POLMD872771E5F0017C5B5C08D353B5E7B4B"
 FOUNDER_TWITTER     = "https://x.com/aluisiofer"
 PROJECT_TWITTER     = "https://x.com/polm2026"
-FOUNDER_LOCK        = 5_256_000       # ~5 years
+FOUNDER_LOCK        = 10_500_000      # 5% of 210M = 10.5M POLM, ~5yr lock
 DEFAULT_PORT        = 6060
 MIN_FEE             = 0.0001
 MAX_MINERS_PER_IP   = 1        # 1 miner per IP — prevents multi-instance cheating
