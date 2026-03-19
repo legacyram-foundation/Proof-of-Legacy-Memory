@@ -60,10 +60,17 @@ def register_miner(ip: str, address: str, founder: str) -> Tuple[bool, str]:
     - 1 address can only mine from 1 IP
     - Founder address bypasses IP restriction (maintenance)
     """
-    # NOTE: IP restriction disabled — miners behind NAT share same IP
+    if address == founder:
+        return True, "founder"   # founder can connect from anywhere
     with _anti_mine_lock:
-        _active_miners[ip] = address
-        _miner_ips[address] = ip
+        existing_ip  = _miner_ips.get(address)
+        existing_addr = _active_miners.get(ip)
+        if existing_ip and existing_ip != ip:
+            return False, f"address already mining from {existing_ip}"
+        if existing_addr and existing_addr != address:
+            return False, f"IP already mining with {existing_addr}"
+        _active_miners[ip]      = address
+        _miner_ips[address]     = ip
     return True, "ok"
 
 def unregister_miner(ip: str, address: str):
@@ -92,7 +99,7 @@ GENESIS_TIME        = 1773881445
 FOUNDER_ADDRESS     = "POLMD872771E5F0017C5B5C08D353B5E7B4B"
 FOUNDER_TWITTER     = "https://x.com/aluisiofer"
 PROJECT_TWITTER     = "https://x.com/polm2026"
-FOUNDER_LOCK        = 10_500_000      # 5% of 210M = 10.5M POLM, ~5yr lock
+FOUNDER_LOCK        = 5_256_000       # ~5 years
 DEFAULT_PORT        = 6060
 MIN_FEE             = 0.0001
 MAX_MINERS_PER_IP   = 1        # 1 miner per IP — prevents multi-instance cheating
@@ -570,7 +577,7 @@ class Blockchain:
         self.tx_block:  Dict[int, List[str]] = {}
         self.ledger     = Ledger()
         self.mempool    = Mempool()
-        self._diff      = T_DIFF if testnet else 3
+        self._diff      = T_DIFF if testnet else 5
         self._peers:    Set[str] = set()
         self._lock      = threading.Lock()
         self._load()
@@ -922,7 +929,13 @@ class PoLMNode:
                 miner_ip = request.remote_addr or "unknown"
 
                 # ── 1 miner per IP enforcement ──────────────────
-                # IP restriction disabled — miners behind NAT share same public IP
+                existing = self.chain._miner_ips.get(miner_ip)
+                if existing and existing != b.miner_id and b.miner_id != FOUNDER_ADDRESS:
+                    # IP already registered to a different miner
+                    return jsonify({
+                        "accepted": False,
+                        "reason": f"IP {miner_ip} already registered to another miner. 1 miner per machine.",
+                    })
 
                 ok, reason = self.chain.add_block(b, txs)
                 if ok:
@@ -1150,7 +1163,13 @@ class PoLMNode:
         print(f"  Rule : 1 IP = 1 miner  (anti-multimine)")
         print()
         # Bootstrap P2P network
-        threading.Thread(target=self.p2p.bootstrap, daemon=True).start()
+        self.p2p.bootstrap()
+        # Announce ourselves to the network in background
+        threading.Thread(
+            target=self.p2p.announce,
+            args=(self.port,),
+            daemon=True
+        ).start()
         self.app.run(
             host="0.0.0.0", port=self.port,
             debug=False, use_reloader=False, threaded=True
@@ -1200,11 +1219,6 @@ class PoLMMiner:
             )
             r = urllib.request.urlopen(req, timeout=8)
             return json.loads(r.read())
-        except urllib.error.HTTPError as e:
-            try:
-                return json.loads(e.read())
-            except Exception:
-                return {"accepted": False, "reason": f"HTTP {e.code}"}
         except Exception:
             return None
 
@@ -1269,7 +1283,7 @@ class PoLMMiner:
                 if lat < 5:
                     continue
 
-                boost = dynamic_boost(lat)
+                boost = dynamic_boost(lat, self.ram, height)
                 sc    = compute_score(lat, boost, self.threads)
 
                 b = Block(
