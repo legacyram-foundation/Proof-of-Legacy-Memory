@@ -60,17 +60,10 @@ def register_miner(ip: str, address: str, founder: str) -> Tuple[bool, str]:
     - 1 address can only mine from 1 IP
     - Founder address bypasses IP restriction (maintenance)
     """
-    if address == founder:
-        return True, "founder"   # founder can connect from anywhere
+    # NOTE: IP restriction disabled — miners behind NAT share same IP
     with _anti_mine_lock:
-        existing_ip  = _miner_ips.get(address)
-        existing_addr = _active_miners.get(ip)
-        if existing_ip and existing_ip != ip:
-            return False, f"address already mining from {existing_ip}"
-        if existing_addr and existing_addr != address:
-            return False, f"IP already mining with {existing_addr}"
-        _active_miners[ip]      = address
-        _miner_ips[address]     = ip
+        _active_miners[ip] = address
+        _miner_ips[address] = ip
     return True, "ok"
 
 def unregister_miner(ip: str, address: str):
