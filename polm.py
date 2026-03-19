@@ -1213,6 +1213,11 @@ class PoLMMiner:
             )
             r = urllib.request.urlopen(req, timeout=8)
             return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            try:
+                return json.loads(e.read())
+            except Exception:
+                return {"accepted": False, "reason": f"HTTP {e.code}"}
         except Exception:
             return None
 
