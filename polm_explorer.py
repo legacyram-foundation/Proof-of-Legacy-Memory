@@ -236,7 +236,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
   <div class="sec">
     <div class="st">Supply <span id="spct"></span></div>
     <div class="sup-wrap">
-      <div class="sup-row"><span id="sm" style="color:var(--cyan)"></span><span style="color:var(--t3)">/ 32,000,000 POLM max</span></div>
+      <div class="sup-row"><span id="sm" style="color:var(--cyan)"></span><span style="color:var(--t3)">/ 210,000,000 POLM max</span></div>
       <div class="sup-bar"><div class="sup-fill" id="sb" style="width:0%"></div></div>
       <div class="sup-meta"><span id="spct2"></span><span>halving ~2yr · 50.0 POLM initial reward</span></div>
     </div>
