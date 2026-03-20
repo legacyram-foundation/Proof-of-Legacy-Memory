@@ -665,6 +665,8 @@ function renderSeedGrid(id,words){
   ).join('');
 }
 
+function goImport(){showScreen('scr-import');}
+
 function goCreate(){
   pendingSeed=genSeed();
   renderSeedGrid('create-seed-grid',pendingSeed);
