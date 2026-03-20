@@ -1010,8 +1010,14 @@ class WalletServer:
     def _routes(self):
         app = self.app
 
+        WALLET_V3_HTML = open(__file__.replace("polm_wallet.py","wallet_v3.html"), encoding="utf-8").read() if __import__("os").path.exists(__file__.replace("polm_wallet.py","wallet_v3.html")) else WALLET_HTML
+
         @app.route("/")
         def index():
+            return Response(WALLET_V3_HTML, mimetype="text/html")
+
+        @app.route("/classic")
+        def index_classic():
             return Response(WALLET_HTML, mimetype="text/html")
 
         @app.route("/wallet/info")
