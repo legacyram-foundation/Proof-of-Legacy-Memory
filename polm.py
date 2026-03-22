@@ -1168,12 +1168,7 @@ class PoLMNode:
         print()
         # Bootstrap P2P network
         self.p2p.bootstrap()
-        # Announce ourselves to the network in background
-        threading.Thread(
-            target=self.p2p.announce,
-            args=(self.port,),
-            daemon=True
-        ).start()
+        # P2P announce removed — bootstrap handles peer discovery
         self.app.run(
             host="0.0.0.0", port=self.port,
             debug=False, use_reloader=False, threaded=True
