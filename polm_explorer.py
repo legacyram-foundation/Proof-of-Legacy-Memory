@@ -287,7 +287,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
     <div class="sup-wrap">
       <div class="sup-row"><span id="sm" style="color:var(--cyan)"></span><span style="color:var(--t3)">/ 210,000,000 POLM max supply</span></div>
       <div class="sup-bar"><div class="sup-fill" id="sb" style="width:0%"></div></div>
-      <div class="sup-meta"><span id="spct2"></span><span>epoch halving · 100.0 POLM initial reward · score = 1/latency_ns</span></div>
+      <div class="sup-meta"><span id="spct2"></span><span>epoch halving · 50.0 POLM initial reward · score = 1/latency_ns</span></div>
     </div>
   </div>
   <div class="two">
@@ -456,7 +456,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
           <td style="color:var(--cyan);font-weight:700">0 ← NOW</td>
           <td>0 – 100k</td><td>~138d</td>
           <td style="color:var(--cyan)">256 MB</td><td style="color:var(--green);font-weight:700">4 GB</td>
-          <td style="color:var(--green);font-weight:700">100 POLM</td>
+          <td style="color:var(--green);font-weight:700">50 POLM</td>
           <td>Any PC with 4 GB+ RAM</td>
         </tr>
         <tr><td>1</td><td>100k – 200k</td><td>~138d</td><td>512 MB</td><td>16 GB</td><td>50 POLM</td><td>Most modern desktops</td></tr>
