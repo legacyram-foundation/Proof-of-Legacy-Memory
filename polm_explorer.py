@@ -455,18 +455,18 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
         <tr class="ep-now">
           <td style="color:var(--cyan);font-weight:700">0 ← NOW</td>
           <td>0 – 100k</td><td>~138d</td>
-          <td style="color:var(--cyan)">256 MB</td><td>1 GB</td>
+          <td style="color:var(--cyan)">256 MB</td><td style="color:var(--green);font-weight:700">4 GB</td>
           <td style="color:var(--green);font-weight:700">100 POLM</td>
-          <td>Any PC — even a 2004 machine</td>
+          <td>Any PC with 4 GB+ RAM</td>
         </tr>
-        <tr><td>1</td><td>100k – 200k</td><td>~138d</td><td>512 MB</td><td>2 GB</td><td>50 POLM</td><td>Most laptops and desktops</td></tr>
-        <tr><td>2</td><td>200k – 300k</td><td>~138d</td><td>1 GB</td><td>4 GB</td><td>25 POLM</td><td>Standard modern PCs</td></tr>
-        <tr><td>3</td><td>300k – 400k</td><td>~138d</td><td>2 GB</td><td>8 GB</td><td>12.5 POLM</td><td>Mid-range workstations</td></tr>
-        <tr><td>4</td><td>400k – 500k</td><td>~138d</td><td>4 GB</td><td>16 GB</td><td>6.25 POLM</td><td>High-end workstations</td></tr>
-        <tr><td>5</td><td>500k – 600k</td><td>~138d</td><td>8 GB</td><td>32 GB</td><td>3.12 POLM</td><td>Server-class machines</td></tr>
-        <tr><td>6</td><td>600k – 700k</td><td>~138d</td><td>16 GB</td><td>64 GB</td><td>1.56 POLM</td><td>Dedicated RAM rigs</td></tr>
-        <tr><td style="color:var(--amber)">7 ⚡</td><td>700k – 800k</td><td>~138d</td><td style="color:var(--amber)">32 GB</td><td style="color:var(--amber)">128 GB</td><td>0.78 POLM</td><td style="color:var(--amber)">RAM mining boards!</td></tr>
-        <tr><td style="color:var(--red)">8+ 🏭</td><td>800k+</td><td>—</td><td style="color:var(--red)">64 GB+</td><td style="color:var(--red)">256 GB+</td><td>0.39 POLM</td><td style="color:var(--red)">Industrial RAM hardware</td></tr>
+        <tr><td>1</td><td>100k – 200k</td><td>~138d</td><td>512 MB</td><td>16 GB</td><td>50 POLM</td><td>Most modern desktops</td></tr>
+        <tr><td>2</td><td>200k – 300k</td><td>~138d</td><td>1 GB</td><td>32 GB</td><td>25 POLM</td><td>High-end workstations</td></tr>
+        <tr><td>3</td><td>300k – 400k</td><td>~138d</td><td>2 GB</td><td>64 GB</td><td>12.5 POLM</td><td>Server-class machines</td></tr>
+        <tr><td>4</td><td>400k – 500k</td><td>~138d</td><td>4 GB</td><td>128 GB</td><td>6.25 POLM</td><td>Dedicated RAM rigs</td></tr>
+        <tr><td>5</td><td>500k – 600k</td><td>~138d</td><td>8 GB</td><td>256 GB</td><td>3.12 POLM</td><td>Enterprise RAM servers</td></tr>
+        <tr><td>6</td><td>600k – 700k</td><td>~138d</td><td>16 GB</td><td>512 GB</td><td>1.56 POLM</td><td>RAM mining boards</td></tr>
+        <tr><td style="color:var(--amber)">7 ⚡</td><td>700k – 800k</td><td>~138d</td><td style="color:var(--amber)">32 GB</td><td style="color:var(--amber)">1 TB</td><td>0.78 POLM</td><td style="color:var(--amber)">Industrial RAM arrays!</td></tr>
+        <tr><td style="color:var(--red)">8+ 🏭</td><td>800k+</td><td>—</td><td style="color:var(--red)">64 GB+</td><td style="color:var(--red)">2 TB+</td><td>0.39 POLM</td><td style="color:var(--red)">New hardware industry</td></tr>
       </tbody>
     </table>
   </div>
