@@ -236,9 +236,9 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
   <div class="sec">
     <div class="st">Supply <span id="spct"></span></div>
     <div class="sup-wrap">
-      <div class="sup-row"><span id="sm" style="color:var(--cyan)"></span><span style="color:var(--t3)">/ 210,000,000 POLM max</span></div>
+      <div class="sup-row"><span id="sm" style="color:var(--cyan)"></span><span style="color:var(--t3)">/ 32,000,000 POLM max</span></div>
       <div class="sup-bar"><div class="sup-fill" id="sb" style="width:0%"></div></div>
-      <div class="sup-meta"><span id="spct2"></span><span>halving ~2yr · 50.0 POLM initial reward</span></div>
+      <div class="sup-meta"><span id="spct2"></span><span>epoch halving · 100.0 POLM initial reward</span></div>
     </div>
   </div>
   <div class="two">
@@ -255,7 +255,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
       <div class="sec">
         <div class="st">Legacy boost</div>
         <div class="bgrid">
-          <div class="bc b2"><div class="bt">DDR2</div><div class="bm">20×</div><div class="bs">~3500–8000 ns · yr 0–2</div><div class="bpen" style="color:var(--green)">max legacy now</div></div>
+          <div class="bc b2"><div class="bt">DDR2</div><div class="bm">1×</div><div class="bs">~3500–8000 ns · pure latency</div><div class="bpen" style="color:var(--green)">any RAM welcome</div></div>
           <div class="bc b3"><div class="bt">DDR3</div><div class="bm">10×</div><div class="bs">~1500–4000 ns</div><div class="bpen" style="color:var(--amber)">strong legacy</div></div>
           <div class="bc b4"><div class="bt">DDR4</div><div class="bm">1×</div><div class="bs">~900–1900 ns</div><div class="bpen" style="color:var(--cyan)">baseline now</div></div>
           <div class="bc b5"><div class="bt">DDR5</div><div class="bm">0.5×</div><div class="bs">~500–900 ns</div><div class="bpen" style="color:var(--red)">penalized now</div></div>
@@ -288,10 +288,10 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
     <div class="st">Thread saturation penalty</div>
     <div class="pen-grid">
       <div class="pen-card"><div class="pen-t">1–2 threads</div><div class="pen-v">1.00×</div></div>
-      <div class="pen-card"><div class="pen-t">3–4 threads</div><div class="pen-v">0.75×</div></div>
-      <div class="pen-card"><div class="pen-t">5–8 threads</div><div class="pen-v">0.50×</div></div>
-      <div class="pen-card"><div class="pen-t">9–16 threads</div><div class="pen-v">0.25×</div></div>
-      <div class="pen-card"><div class="pen-t">17+ threads</div><div class="pen-v">0.10×</div></div>
+      <div class="pen-card"><div class="pen-t">3–4 threads</div><div class="pen-v">0.90×</div></div>
+      <div class="pen-card"><div class="pen-t">5–8 threads</div><div class="pen-v">0.80×</div></div>
+      <div class="pen-card"><div class="pen-t">9–16 threads</div><div class="pen-v">0.65×</div></div>
+      <div class="pen-card"><div class="pen-t">5+ threads</div><div class="pen-v">0.75×</div></div>
     </div>
   </div>
 </div>
@@ -324,7 +324,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
       <div class="irow"><span class="ik">Score formula</span><span class="iv" style="color:var(--cyan)">(1/latency) × boost × penalty</span></div>
       <div class="irow"><span class="ik">Dynamic boost</span><span class="iv">(latency/1000)^0.8</span></div>
       <div class="irow"><span class="ik">Baseline</span><span class="iv">1000 ns (DDR4)</span></div>
-      <div class="irow"><span class="ik">DAG mainnet</span><span class="iv">256 MB + 64 MB/epoch</span></div>
+      <div class="irow"><span class="ik">DAG mainnet</span><span class="iv">256 MB epoch 0, doubles each epoch</span></div>
       <div class="irow"><span class="ik">Walk steps</span><span class="iv">100,000 per nonce</span></div>
       <div class="irow"><span class="ik">Hash function</span><span class="iv">SHA3-256</span></div>
       <div class="irow"><span class="ik">Signatures</span><span class="iv">ECDSA secp256k1</span></div>
@@ -334,7 +334,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
   <div class="sec">
     <div class="st">Boost table — validated testnet (816 blocks)</div>
     <div class="bgrid">
-      <div class="bc b2"><div class="bt">DDR2</div><div class="bm">20×</div><div class="bs">Halving 1 — max</div><div class="bpen" style="color:var(--green)">Core2Duo 2006 ✓</div></div>
+      <div class="bc b2"><div class="bt">Any RAM</div><div class="bm">1×</div><div class="bs">Pure latency consensus</div><div class="bpen" style="color:var(--green)">Any RAM welcome ✓</div></div>
       <div class="bc b3"><div class="bt">DDR3</div><div class="bm">10×</div><div class="bs">Halving 1 — strong</div><div class="bpen" style="color:var(--amber)">Legacy bonus ✓</div></div>
       <div class="bc b4"><div class="bt">DDR4</div><div class="bm">1×→8×</div><div class="bs">Grows each halving</div><div class="bpen" style="color:var(--cyan)">Dominates yr 6 ✓</div></div>
       <div class="bc b5"><div class="bt">DDR5</div><div class="bm">0.5×→10×</div><div class="bs">Grows each halving</div><div class="bpen" style="color:var(--purple)">Dominates yr 10 ✓</div></div>
@@ -344,14 +344,14 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
     <div class="st">Halving schedule</div>
     <table><thead><tr><th>Period</th><th>Height range</th><th>Reward</th><th>Year</th><th>RAM / DAG</th></tr></thead>
     <tbody>
-      <tr><td style="color:var(--cyan)">1</td><td>0 – 2,099,999</td><td style="color:var(--green)">50.0 POLM</td><td>Year 0–2</td><td>DAG 256MB · DDR2=12× · min 4GB</td></tr>
+      <tr><td style="color:var(--cyan)">0</td><td>0 – 99,999</td><td style="color:var(--green)">100 POLM</td><td>~138 days</td><td>DAG 256MB · min 1GB · any RAM</td></tr>
       <tr><td>2</td><td>2.1M – 4.2M</td><td>2.5 POLM</td><td>Year 2–4</td><td>DAG 512MB · DDR4=4× · min 8GB</td></tr>
       <tr><td>3</td><td>4.2M – 6.3M</td><td>1.25 POLM</td><td>Year 4–6</td><td>DAG 1GB · DDR4=6× · min 16GB</td></tr>
       <tr><td>4</td><td>6.3M – 8.4M</td><td>0.625 POLM</td><td>Year 6–8</td><td>DAG 2GB · DDR5=6× · min 32GB</td></tr>
       <tr><td>5</td><td>8.4M – 10.5M</td><td>0.3125 POLM</td><td>Year 8–10</td><td>DAG 4GB · DDR5=8× · min 64GB</td></tr>
       <tr><td>6</td><td>10.5M – 12.6M</td><td>0.156 POLM</td><td>Year 10–12</td><td>DAG 8GB · DDR5=10× · min 128GB</td></tr>
-      <tr><td style="color:var(--amber)">7</td><td>12.6M – 14.7M</td><td>0.078 POLM</td><td>Year 12–14</td><td style="color:var(--amber)">DAG 16GB · DDR6=12× · min 256GB ← RAM board!</td></tr>
-      <tr><td style="color:var(--red)">8+</td><td>14.7M+</td><td>decreasing</td><td>Year 14+</td><td style="color:var(--red)">DAG 32GB+ · DDR7=12× · min 512GB ← new market</td></tr>
+      <tr><td style="color:var(--amber)">7</td><td>700k – 800k</td><td>0.78 POLM</td><td>~epoch 7</td><td style="color:var(--amber)">DAG 32GB · min 128GB ← RAM mining board!</td></tr>
+      <tr><td style="color:var(--red)">8+</td><td>800k+</td><td>decreasing</td><td>epoch 8+</td><td style="color:var(--red)">DAG 64GB+ · min 256GB+ ← dedicated hardware market!</td></tr>
     </tbody></table>
   </div>
   <div class="sec">
@@ -366,7 +366,7 @@ footer{border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-con
 </div>
 
 <footer>
-  <div class="fl">PoLM Explorer v2.1.0 &nbsp;·&nbsp; <a href="https://polm.com.br">polm.com.br</a> &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Mainnet</div>
+  <div class="fl">PoLM Explorer v2.0.0 &nbsp;·&nbsp; <a href="https://polm.com.br">polm.com.br</a> &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Mainnet</div>
   <div class="fl"><a href="https://x.com/polm2026" target="_blank">@polm2026</a> &nbsp;·&nbsp; <a href="https://x.com/aluisiofer" target="_blank">@aluisiofer</a> &nbsp;·&nbsp; <a href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">GitHub</a></div>
 </footer>
 
@@ -418,7 +418,7 @@ async function loadSummary(){
     {l:'Difficulty',v:d.difficulty,s:('0'.repeat(d.difficulty||0)+'…').slice(0,10)+' target',ac:'--amber'},
     {l:'Next Reward',v:(d.next_reward||0).toFixed(2),s:'POLM per block',ac:'--green'},
     {l:'Epoch',v:d.epoch||0,s:((d.height||0)%100000/1000).toFixed(2)+'% complete',ac:'--purple'},
-    {l:'Block Time',v:d.block_time+'s',s:(d.block_time||30)+'s target',ac:'--cyan'},
+    {l:'Block Time',v:d.block_time+'s',s:(d.block_time||120)+'s target',ac:'--cyan'},
     {l:'Chain Tip',v:(d.tip_hash||'').slice(0,8)+'…',s:'sha3-256',ac:'--cyan'},
     {l:'Mempool',v:d.mempool_size||0,s:'pending txs',ac:'--amber'},
     {l:'Peers',v:d.peers||0,s:'connected nodes',ac:'--green'},
@@ -431,8 +431,8 @@ async function loadSummary(){
   document.getElementById('sb').style.width=Math.min(pct,100)+'%';
   document.getElementById('spct2').textContent=pct+'% of max supply';
   document.getElementById('ni').innerHTML=[
-    ['Symbol','POLM'],['Max supply','210,000,000'],['Block time','30 seconds'],
-    ['Halving','every ~2 years (2,100,000 blocks)'],['Retarget','every 144 blocks (±25%)'],
+    ['Symbol','POLM'],['Max supply','210,000,000'],['Block time','120 seconds (2 min)'],
+    ['Halving','every epoch (100,000 blocks, ~138 days)'],['Retarget','every 144 blocks (±25%)'],
     ['Hash algo','SHA3-256'],['Version',d.version||'1.2.0'],
   ].map(([k,v])=>`<div class="irow"><span class="ik">${k}</span><span class="iv">${v}</span></div>`).join('');
 }
@@ -544,7 +544,7 @@ async function loadProto(){
     ['Symbol','POLM'],['Network',d.network||'mainnet'],['Version',d.version||'1.2.0'],
     ['Height',fn(d.height||0)],['Difficulty',d.difficulty||4],['Epoch',d.epoch||0],
     ['DAG size',(d.dag_size_mb||256)+'MB'],['Max supply','210,000,000 POLM'],
-    ['Block time','30 seconds'],['Halving interval','2,100,000 blocks (~2yr)'],
+    ['Block time','120 seconds (2 min)'],['Halving interval','100,000 blocks per epoch (~138 days)'],
     ['Retarget window','144 blocks (±25%)'],['Founder lock','5,256,000 blocks (~5yr)'],
   ].map(([k,v])=>`<div class="irow"><span class="ik">${k}</span><span class="iv">${v}</span></div>`).join('');
 }
@@ -594,7 +594,7 @@ def create_explorer(node_url: str = "http://localhost:6060", port: int = 5050):
             return "Block not found", 404
         b   = item.get("block", item)
         ts  = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(b.get("timestamp", 0)))
-        boost = {"DDR2":10,"DDR3":8,"DDR4":1,"DDR5":0.5}.get(b.get("ram_type","DDR4"), 1)
+        boost = 1.0  # pure latency — no boost
         txs = item.get("txs", [])
         rows = [
             ("height",       str(b.get("height","")),                  "cyan"),
