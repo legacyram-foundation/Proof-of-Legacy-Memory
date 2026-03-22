@@ -1201,7 +1201,7 @@ class PoLMMiner:
             checks = 0
             # Rate limit: DDR4 sleeps to let DDR2 compete
             _ddr_num = int(self.ram.replace("DDR","").strip() or "4")
-            _ram_sleep = max(0.0, (_ddr_num - 2) * 0.0001)
+            _ram_sleep = max(0.0, (_ddr_num - 2) * 0.00003)  # ~1M nonces/s for DDR4
 
             while not self.stop.is_set():
                 nonce  += 1
