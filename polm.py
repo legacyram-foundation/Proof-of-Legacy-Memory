@@ -169,18 +169,18 @@ DAG_BASE_PER_HALVING = {
 
 # Minimum RAM per epoch — aggressive growth forces hardware evolution
 MIN_RAM_MB = {
-    0:       1_024,   # 1GB    — any PC
-    1:       2_048,   # 2GB    — decent PC
-    2:       4_096,   # 4GB    — gaming PC
-    3:       8_192,   # 8GB    — workstation
-    4:      16_384,   # 16GB   — high-end PC
-    5:      32_768,   # 32GB   — server
-    6:      65_536,   # 64GB   — dedicated rig
-    7:     131_072,   # 128GB  — RAM mining board!
-    8:     262_144,   # 256GB  — industrial
-    9:     524_288,   # 512GB  — new hardware market
-    10:  1_048_576,   # 1TB    — specialized motherboards
-    11:  2_097_152,   # 2TB    — factory-scale
+    0:       4_096,   # 4GB    — any PC with 4GB+
+    1:      16_384,   # 16GB   — modern desktops
+    2:      32_768,   # 32GB   — high-end workstations
+    3:      65_536,   # 64GB   — server-class
+    4:     131_072,   # 128GB  — dedicated RAM rigs
+    5:     262_144,   # 256GB  — enterprise RAM servers
+    6:     524_288,   # 512GB  — RAM mining boards
+    7:   1_048_576,   # 1TB    — industrial RAM arrays!
+    8:   2_097_152,   # 2TB    — new hardware industry
+    9:   4_194_304,   # 4TB    — specialized hardware
+    10:  8_388_608,   # 8TB    — factory-scale
+    11: 16_777_216,   # 16TB   — future hardware market
 }
 
 def get_halving(height: int) -> int:
