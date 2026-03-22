@@ -4,293 +4,441 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PoLM — Proof of Legacy Memory | RAM-Latency PoW Blockchain</title>
-<meta name="description" content="PoLM is the first RAM-latency-bound Proof-of-Work. A 2006 Core 2 Duo with DDR2 mines 52% of all blocks. 50 POLM/block. 210M max supply. Mainnet live.">
+<meta name="description" content="PoLM is the first RAM-latency-bound Proof-of-Work. Any RAM mines — DDR2, DDR3, DDR4, DDR5. Score = 1/latency. 100 POLM/block. 210M max supply. Mainnet live.">
 <meta property="og:title" content="PoLM — Proof of Legacy Memory">
-<meta property="og:description" content="The first RAM-latency-bound PoW. Old hardware earns more. DDR2 = 12× boost. 50 POLM per block.">
+<meta property="og:description" content="The first RAM-latency-bound PoW. Any RAM mines. Latency is the only truth.">
 <meta property="og:url" content="https://polm.com.br">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@polm2026">
 <meta name="twitter:title" content="PoLM — Proof of Legacy Memory">
-<meta name="twitter:description" content="Mine with any old PC. DDR2 earns 12× more than DDR4. Mainnet live.">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="twitter:description" content="Mine with any RAM. DDR2 to DDR5 — latency is the only judge. Mainnet live.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#07080a;--s1:#0d1017;--s2:#131a24;--s3:#0a0f16;--b1:#1e2a38;--b2:#263346;
-  --cyan:#22d3ee;--cyan2:#0891b2;--green:#22c55e;--amber:#f59e0b;
-  --orange:#f97316;--purple:#a78bfa;--red:#ef4444;--pink:#ec4899;
-  --t1:#f0f4f8;--t2:#8ba3bc;--t3:#3d5166;
-  --mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif
+  --bg:#05070a;
+  --s1:#0b0e14;--s2:#0f1520;--s3:#080b10;
+  --b1:#1a2332;--b2:#223044;
+  --cyan:#00e5ff;--cyan2:#0097a7;--cyan3:rgba(0,229,255,.08);
+  --green:#00e676;--amber:#ffab00;--orange:#ff6d00;
+  --purple:#d500f9;--red:#ff1744;
+  --t1:#e8f0f8;--t2:#7090a8;--t3:#2d4055;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Syne',sans-serif;
+  --glow:0 0 40px rgba(0,229,255,.15)
 }
 html{font-size:14px;scroll-behavior:smooth}
 body{background:var(--bg);color:var(--t1);font-family:var(--sans);overflow-x:hidden}
 
+/* ── GRAIN TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity:.4
+}
+
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:200;
-  background:rgba(7,8,10,.92);backdrop-filter:blur(20px);
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(5,7,10,.9);backdrop-filter:blur(24px);
   border-bottom:1px solid var(--b1);height:58px;
-  display:flex;align-items:center;padding:0 32px;gap:16px}
-.nav-logo{font-family:var(--mono);font-weight:700;font-size:1rem;
-  color:var(--cyan);letter-spacing:.04em;text-decoration:none;white-space:nowrap}
-.nav-logo em{color:var(--t3);font-style:normal;font-weight:300}
+  display:flex;align-items:center;padding:0 32px;gap:16px
+}
+.nav-logo{
+  font-family:var(--mono);font-weight:700;font-size:.95rem;
+  color:var(--cyan);letter-spacing:.06em;text-decoration:none;white-space:nowrap;
+  display:flex;align-items:center;gap:8px
+}
+.nav-logo .pulse{
+  width:6px;height:6px;border-radius:50%;background:var(--green);
+  animation:pulse 2s infinite
+}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,230,118,.4)}
+  50%{opacity:.5;box-shadow:0 0 0 6px rgba(0,230,118,0)}}
 .nav-links{display:flex;gap:4px;margin-left:auto;align-items:center}
-.nlink{padding:6px 14px;border-radius:6px;font-size:.78rem;font-weight:500;
-  text-decoration:none;color:var(--t2);transition:all .15s;white-space:nowrap}
+.nlink{
+  padding:6px 14px;border-radius:6px;font-size:.75rem;font-weight:600;
+  text-decoration:none;color:var(--t2);transition:all .15s;white-space:nowrap;
+  letter-spacing:.04em
+}
 .nlink:hover{color:var(--t1);background:var(--s2)}
-.nlink.active{color:var(--cyan)}
-.nbtn{padding:8px 18px;border-radius:8px;font-size:.8rem;font-weight:700;
-  text-decoration:none;transition:all .15s;white-space:nowrap}
+.nbtn{
+  padding:8px 18px;border-radius:8px;font-size:.77rem;font-weight:700;
+  text-decoration:none;transition:all .15s;white-space:nowrap;letter-spacing:.04em
+}
 .nbtn-mine{background:var(--cyan);color:#000}
-.nbtn-mine:hover{background:var(--cyan2);color:#fff;transform:translateY(-1px)}
-.nbtn-list{border:1px solid var(--amber);color:var(--amber)}
-.nbtn-list:hover{background:var(--amber);color:#000}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
-  animation:blink 2s infinite;display:inline-block;margin-right:5px}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.nbtn-mine:hover{filter:brightness(1.15);transform:translateY(-1px)}
 
 /* ── HERO ── */
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;text-align:center;padding:90px 24px 60px;position:relative;
-  background:radial-gradient(ellipse 100% 70% at 50% 0%,rgba(34,211,238,.07) 0%,transparent 60%)}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--b1),transparent)}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;
-  border-radius:20px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);
-  color:var(--green);font-family:var(--mono);font-size:.72rem;font-weight:600;
-  margin-bottom:32px;letter-spacing:.05em}
-.hero h1{font-size:clamp(2.8rem,7vw,5.5rem);font-weight:800;line-height:1.05;
-  margin-bottom:24px;letter-spacing:-.03em;max-width:900px}
-.hero h1 .accent{color:var(--cyan)}
-.hero h1 .accent2{
-  background:linear-gradient(135deg,#fb923c,var(--amber));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero-sub{font-size:clamp(.95rem,2vw,1.2rem);color:var(--t2);
-  max-width:620px;margin:0 auto 44px;line-height:1.75}
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:90px 24px 60px;position:relative;
+  overflow:hidden
+}
+.hero-bg-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)
+}
+.hero-glow{
+  position:absolute;top:10%;left:50%;transform:translateX(-50%);
+  width:700px;height:400px;
+  background:radial-gradient(ellipse,rgba(0,229,255,.06) 0%,transparent 70%);
+  pointer-events:none
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;padding:7px 18px;
+  border-radius:20px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);
+  color:var(--green);font-family:var(--mono);font-size:.7rem;font-weight:600;
+  margin-bottom:36px;letter-spacing:.08em;position:relative;z-index:1
+}
+.hero h1{
+  font-size:clamp(3rem,8vw,6.5rem);font-weight:800;line-height:1;
+  margin-bottom:28px;letter-spacing:-.04em;max-width:1000px;
+  position:relative;z-index:1
+}
+.hero h1 .hl{
+  color:var(--cyan);
+  text-shadow:0 0 80px rgba(0,229,255,.3)
+}
+.hero-tagline{
+  font-family:var(--mono);font-size:clamp(.9rem,2vw,1.1rem);
+  color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;
+  margin-bottom:20px;position:relative;z-index:1;opacity:.8
+}
+.hero-sub{
+  font-size:clamp(.9rem,1.8vw,1.1rem);color:var(--t2);
+  max-width:560px;margin:0 auto 48px;line-height:1.8;
+  position:relative;z-index:1
+}
 .hero-sub strong{color:var(--t1)}
-.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:64px}
-.btn{padding:14px 32px;border-radius:10px;font-size:.9rem;font-weight:700;
+.hero-btns{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+  margin-bottom:64px;position:relative;z-index:1
+}
+.btn{
+  padding:14px 32px;border-radius:10px;font-size:.85rem;font-weight:700;
   text-decoration:none;transition:all .2s;border:none;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px}
+  display:inline-flex;align-items:center;gap:8px;letter-spacing:.04em;
+  font-family:var(--sans)
+}
 .btn-primary{background:var(--cyan);color:#000}
-.btn-primary:hover{background:var(--cyan2);color:#fff;transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(34,211,238,.2)}
-.btn-secondary{border:1px solid var(--b2);color:var(--t2)}
-.btn-secondary:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(34,211,238,.04)}
-.btn-exchange{border:1px solid var(--amber);color:var(--amber)}
-.btn-exchange:hover{background:var(--amber);color:#000;transform:translateY(-2px)}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:var(--glow)}
+.btn-ghost{border:1px solid var(--b2);color:var(--t2)}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan3)}
 
-/* ── LIVE TICKER ── */
-.ticker{display:flex;gap:0;background:var(--s1);border:1px solid var(--b1);
-  border-radius:14px;overflow:hidden;max-width:900px;width:100%;margin:0 auto}
-.tick{flex:1;padding:18px 20px;text-align:center;border-right:1px solid var(--b1)}
+/* ── TICKER ── */
+.ticker{
+  display:flex;gap:0;background:var(--s1);border:1px solid var(--b1);
+  border-radius:14px;overflow:hidden;max-width:860px;width:100%;
+  position:relative;z-index:1
+}
+.tick{flex:1;padding:18px 16px;text-align:center;border-right:1px solid var(--b1)}
 .tick:last-child{border-right:none}
-.tick-label{font-size:.58rem;color:var(--t3);text-transform:uppercase;
-  letter-spacing:.12em;font-family:var(--mono);margin-bottom:6px}
-.tick-val{font-size:1.15rem;font-weight:700;font-family:var(--mono)}
-.tick-val.c{color:var(--cyan)}.tick-val.g{color:var(--green)}
-.tick-val.a{color:var(--amber)}
-.tick-sub{font-size:.58rem;color:var(--t3);font-family:var(--mono);margin-top:2px}
+.tick-label{
+  font-size:.56rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.14em;font-family:var(--mono);margin-bottom:6px
+}
+.tick-val{font-size:1.1rem;font-weight:700;font-family:var(--mono)}
+.c{color:var(--cyan)}.g{color:var(--green)}.a{color:var(--amber)}
 
-/* ── PROOF SECTION ── */
-.section{padding:88px 24px;max-width:1160px;margin:0 auto}
-.section-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--cyan);font-family:var(--mono);
-  margin-bottom:14px;text-align:center}
-h2.section-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;
-  text-align:center;margin-bottom:14px;letter-spacing:-.02em;line-height:1.15}
-.section-desc{text-align:center;color:var(--t2);font-size:1rem;
-  margin-bottom:56px;max-width:580px;margin-left:auto;margin-right:auto;line-height:1.7}
+/* ── SECTIONS ── */
+.section{padding:96px 24px;max-width:1160px;margin:0 auto}
+.eyebrow{
+  font-size:.65rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--cyan);font-family:var(--mono);margin-bottom:16px;
+  display:block;text-align:center
+}
+h2.title{
+  font-size:clamp(1.8rem,3.5vw,3rem);font-weight:800;
+  text-align:center;margin-bottom:16px;letter-spacing:-.03em;line-height:1.1
+}
+.desc{
+  text-align:center;color:var(--t2);font-size:.95rem;
+  margin-bottom:56px;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.8
+}
 
-/* ── PROOF TABLE ── */
-.proof-table{width:100%;border-collapse:collapse;margin-bottom:40px;
-  background:var(--s1);border-radius:14px;overflow:hidden;border:1px solid var(--b1)}
-.proof-table th{text-align:left;padding:12px 20px;font-size:.62rem;color:var(--t3);
-  text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);
-  border-bottom:1px solid var(--b1);font-weight:400;background:var(--s3)}
-.proof-table td{padding:16px 20px;border-bottom:1px solid rgba(30,42,56,.4);
-  font-family:var(--mono);font-size:.88rem}
-.proof-table tr:last-child td{border-bottom:none}
-.proof-table .winner td{background:rgba(251,191,36,.04)}
-.proof-table tr:hover td{background:rgba(34,211,238,.02)}
+/* ── HOW IT WORKS — THE CORE TRUTH ── */
+.truth-bg{
+  background:var(--s1);border-top:1px solid var(--b1);
+  border-bottom:1px solid var(--b1);padding:96px 24px
+}
+.truth-inner{max-width:1160px;margin:0 auto}
+.formula-hero{
+  background:var(--bg);border:1px solid var(--b1);border-radius:20px;
+  padding:48px;text-align:center;margin-bottom:48px;position:relative;overflow:hidden
+}
+.formula-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(0,229,255,.04),transparent);
+  pointer-events:none
+}
+.formula-eq{
+  font-family:var(--mono);font-size:clamp(1.2rem,3vw,2rem);
+  color:var(--cyan);font-weight:700;letter-spacing:.05em;
+  margin-bottom:16px;position:relative
+}
+.formula-label{
+  font-family:var(--mono);font-size:.78rem;color:var(--t3);
+  letter-spacing:.08em;line-height:2
+}
+.formula-label span{color:var(--t2)}
 
-/* ── BOOST CARDS ── */
-.boost-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:0}
-@media(max-width:768px){.boost-grid{grid-template-columns:repeat(2,1fr)}}
-.bc{background:var(--s1);border:1px solid var(--b1);border-radius:14px;
-  padding:28px 20px;text-align:center;transition:all .2s;position:relative;overflow:hidden}
-.bc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.bc:hover{transform:translateY(-4px);border-color:var(--b2)}
-.bc-ddr2::before{background:linear-gradient(90deg,#fb923c,#f97316)}
-.bc-ddr3::before{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
-.bc-ddr4::before{background:linear-gradient(90deg,var(--cyan),var(--cyan2))}
-.bc-ddr5::before{background:linear-gradient(90deg,#f87171,#ef4444)}
-.bc-type{font-family:var(--mono);font-size:.8rem;font-weight:700;
-  color:var(--t2);margin-bottom:10px;letter-spacing:.08em}
-.bc-boost{font-family:var(--mono);font-size:3rem;font-weight:800;
-  line-height:1;margin-bottom:6px}
-.bc-ddr2 .bc-boost{color:#fb923c}
-.bc-ddr3 .bc-boost{color:#fbbf24}
-.bc-ddr4 .bc-boost{color:var(--cyan)}
-.bc-ddr5 .bc-boost{color:#f87171}
-.bc-lat{font-size:.68rem;color:var(--t3);font-family:var(--mono);margin-bottom:12px}
-.bc-tag{display:inline-block;padding:4px 12px;border-radius:20px;
-  font-size:.62rem;font-family:var(--mono);font-weight:700}
-.tag-max{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
-.tag-ok{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
-.tag-base{background:rgba(34,211,238,.08);color:var(--cyan);border:1px solid rgba(34,211,238,.15)}
-.tag-pen{background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.15)}
+.truth-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:860px){.truth-cards{grid-template-columns:1fr}}
+.tc{
+  background:var(--bg);border:1px solid var(--b1);border-radius:16px;
+  padding:32px;transition:border-color .2s
+}
+.tc:hover{border-color:var(--b2)}
+.tc-n{
+  font-family:var(--mono);font-size:3rem;font-weight:800;
+  color:var(--cyan);opacity:.15;line-height:1;margin-bottom:16px
+}
+.tc-h{font-size:1.05rem;font-weight:700;margin-bottom:10px}
+.tc-p{font-size:.88rem;color:var(--t2);line-height:1.75}
 
-/* ── WHY POLM (INVESTOR) ── */
-.why-bg{background:var(--s1);border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);
-  padding:88px 24px}
+/* ── ANY RAM SECTION ── */
+.ram-bg{padding:96px 24px}
+.ram-inner{max-width:1160px;margin:0 auto}
+.ram-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:40px}
+@media(max-width:900px){.ram-grid{grid-template-columns:repeat(2,1fr)}}
+.rc{
+  background:var(--s1);border:1px solid var(--b1);border-radius:16px;
+  padding:32px 20px;text-align:center;transition:all .25s;position:relative;overflow:hidden
+}
+.rc::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px
+}
+.rc-ddr2::after{background:linear-gradient(90deg,#ff6d00,#ffab00)}
+.rc-ddr3::after{background:linear-gradient(90deg,#ffab00,#69f0ae)}
+.rc-ddr4::after{background:linear-gradient(90deg,var(--cyan),#0097a7)}
+.rc-ddr5::after{background:linear-gradient(90deg,#d500f9,#ff1744)}
+.rc:hover{transform:translateY(-4px);border-color:var(--b2)}
+.rc-type{
+  font-family:var(--mono);font-size:.75rem;font-weight:700;
+  color:var(--t3);margin-bottom:14px;letter-spacing:.1em
+}
+.rc-icon{font-size:2.8rem;margin-bottom:12px;line-height:1}
+.rc-name{font-size:1.3rem;font-weight:800;margin-bottom:8px}
+.rc-ddr2 .rc-name{color:#ffab00}
+.rc-ddr3 .rc-name{color:#69f0ae}
+.rc-ddr4 .rc-name{color:var(--cyan)}
+.rc-ddr5 .rc-name{color:#d500f9}
+.rc-lat{font-family:var(--mono);font-size:.72rem;color:var(--t3);margin-bottom:16px;line-height:1.6}
+.rc-tag{
+  display:inline-block;padding:5px 14px;border-radius:20px;
+  font-size:.62rem;font-family:var(--mono);font-weight:700;letter-spacing:.06em
+}
+.tag-any{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2)}
+
+.ram-note{
+  background:var(--s1);border:1px solid var(--b1);border-radius:14px;
+  padding:24px 28px;text-align:center
+}
+.ram-note p{font-family:var(--mono);font-size:.85rem;color:var(--t2);line-height:2}
+.ram-note strong{color:var(--cyan)}
+
+/* ── EPOCHS ── */
+.epoch-bg{
+  background:var(--s1);border-top:1px solid var(--b1);
+  border-bottom:1px solid var(--b1);padding:96px 24px
+}
+.epoch-inner{max-width:1160px;margin:0 auto}
+.epoch-table{
+  width:100%;border-collapse:collapse;background:var(--bg);
+  border-radius:16px;overflow:hidden;border:1px solid var(--b1)
+}
+.epoch-table th{
+  text-align:left;padding:12px 20px;font-size:.6rem;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.12em;font-family:var(--mono);
+  border-bottom:1px solid var(--b1);background:var(--s3);font-weight:400
+}
+.epoch-table td{
+  padding:16px 20px;border-bottom:1px solid rgba(26,35,50,.4);
+  font-family:var(--mono);font-size:.85rem
+}
+.epoch-table tr:last-child td{border-bottom:none}
+.epoch-table .ep-now td{background:rgba(0,229,255,.03)}
+.epoch-table .ep-now td:first-child{
+  color:var(--cyan);font-weight:700
+}
+.epoch-table tr:hover td{background:rgba(0,229,255,.02);transition:background .15s}
+.ep-badge{
+  display:inline-block;padding:3px 10px;border-radius:4px;
+  font-size:.68rem;font-weight:700
+}
+.ep-now-tag{background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.2)}
+.ep-future{background:rgba(45,64,85,.4);color:var(--t3)}
+
+/* ── WHY ── */
+.why-bg{padding:96px 24px;background:var(--bg)}
 .why-inner{max-width:1160px;margin:0 auto}
-.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:0}
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media(max-width:900px){.why-grid{grid-template-columns:1fr}}
-.why-card{background:var(--bg);border:1px solid var(--b1);border-radius:14px;
-  padding:28px;transition:border-color .2s}
-.why-card:hover{border-color:var(--b2)}
-.why-icon{font-size:2rem;margin-bottom:16px}
-.why-title{font-size:1.05rem;font-weight:700;margin-bottom:10px}
-.why-text{font-size:.88rem;color:var(--t2);line-height:1.7}
+.wc{
+  background:var(--s1);border:1px solid var(--b1);border-radius:16px;
+  padding:32px;transition:border-color .2s
+}
+.wc:hover{border-color:var(--b2)}
+.wc-icon{font-size:1.8rem;margin-bottom:18px}
+.wc-h{font-size:1rem;font-weight:700;margin-bottom:10px}
+.wc-p{font-size:.88rem;color:var(--t2);line-height:1.75}
 
 /* ── TOKENOMICS ── */
-.token-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px}
-@media(max-width:768px){.token-grid{grid-template-columns:1fr}}
-.token-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:28px}
-.token-title{font-size:.62rem;color:var(--t3);text-transform:uppercase;
-  letter-spacing:.12em;font-family:var(--mono);margin-bottom:16px}
-.token-table{width:100%;border-collapse:collapse}
-.token-table td{padding:10px 0;border-bottom:1px solid rgba(30,42,56,.4);
-  font-size:.88rem;vertical-align:top}
-.token-table tr:last-child td{border-bottom:none}
-.token-table td:first-child{color:var(--t3);font-family:var(--mono);width:48%}
-.token-table td:last-child{color:var(--t1);font-family:var(--mono);font-weight:600}
+.token-bg{
+  background:var(--s1);border-top:1px solid var(--b1);
+  border-bottom:1px solid var(--b1);padding:96px 24px
+}
+.token-inner{max-width:1160px;margin:0 auto}
+.token-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:760px){.token-grid{grid-template-columns:1fr}}
+.token-card{background:var(--bg);border:1px solid var(--b1);border-radius:16px;padding:32px}
+.token-label{
+  font-size:.6rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.14em;font-family:var(--mono);margin-bottom:20px
+}
+.trow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid rgba(26,35,50,.4);font-family:var(--mono);font-size:.85rem
+}
+.trow:last-child{border-bottom:none}
+.trow .tk{color:var(--t3)}
+.trow .tv{color:var(--t1);font-weight:600}
 .halving-table{width:100%;border-collapse:collapse}
-.halving-table th{text-align:left;padding:8px 12px;font-size:.6rem;color:var(--t3);
+.halving-table th{
+  text-align:left;padding:9px 12px;font-size:.6rem;color:var(--t3);
   text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);
-  border-bottom:1px solid var(--b1);font-weight:400}
-.halving-table td{padding:10px 12px;border-bottom:1px solid rgba(30,42,56,.35);
-  font-family:var(--mono);font-size:.82rem}
+  border-bottom:1px solid var(--b1);font-weight:400
+}
+.halving-table td{
+  padding:11px 12px;border-bottom:1px solid rgba(26,35,50,.35);
+  font-family:var(--mono);font-size:.82rem
+}
 .halving-table tr:last-child td{border-bottom:none}
-.halving-table .current td{background:rgba(34,211,238,.04)}
-
-/* ── ROADMAP ── */
-.roadmap-bg{background:var(--s3);border-top:1px solid var(--b1);
-  border-bottom:1px solid var(--b1);padding:88px 24px}
-.roadmap-inner{max-width:1160px;margin:0 auto}
-.rm-table{width:100%;border-collapse:collapse;background:var(--s1);
-  border-radius:14px;overflow:hidden;border:1px solid var(--b1)}
-.rm-table th{text-align:left;padding:12px 20px;font-size:.62rem;color:var(--t3);
-  text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);
-  border-bottom:1px solid var(--b1);background:var(--s3);font-weight:400}
-.rm-table td{padding:14px 20px;border-bottom:1px solid rgba(30,42,56,.35);
-  font-family:var(--mono);font-size:.82rem}
-.rm-table tr:last-child td{border-bottom:none}
-.rm-now td:first-child{color:var(--cyan)}
-.rm-now{background:rgba(34,211,238,.02)}
-.rm-y2 td:first-child{color:var(--amber)}
-.rm-board td:first-child{color:var(--purple)}
-.rm-check{color:var(--green)}.rm-x{color:var(--t3)}.rm-soon{color:var(--amber)}
-
-/* ── ALGORITHM ── */
-.algo-bg{background:var(--s1);border-top:1px solid var(--b1);
-  border-bottom:1px solid var(--b1);padding:88px 24px}
-.algo-inner{max-width:1160px;margin:0 auto}
-.formula-box{background:var(--bg);border:1px solid var(--b1);border-radius:14px;
-  padding:28px;text-align:center;font-family:var(--mono);margin:0 0 40px}
-.formula-eq{font-size:1.15rem;color:var(--cyan);margin-bottom:8px;font-weight:600}
-.formula-note{font-size:.75rem;color:var(--t3)}
-.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-@media(max-width:768px){.steps-grid{grid-template-columns:1fr}}
-.step-card{padding:28px;background:var(--s3);border:1px solid var(--b1);border-radius:14px}
-.step-n{font-family:var(--mono);font-size:2.5rem;font-weight:800;
-  color:var(--cyan);opacity:.25;margin-bottom:14px;line-height:1}
-.step-h{font-size:1rem;font-weight:700;margin-bottom:10px}
-.step-p{font-size:.88rem;color:var(--t2);line-height:1.75}
-
-/* ── EXCHANGES / LISTING ── */
-.list-bg{padding:88px 24px;background:var(--bg)}
-.list-inner{max-width:1160px;margin:0 auto}
-.list-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:0}
-@media(max-width:900px){.list-cards{grid-template-columns:1fr}}
-.list-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;
-  padding:28px;transition:all .2s}
-.list-card:hover{border-color:var(--amber);transform:translateY(-2px)}
-.list-icon{font-size:2rem;margin-bottom:12px}
-.list-title{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--amber)}
-.list-text{font-size:.85rem;color:var(--t2);line-height:1.7;margin-bottom:16px}
-.list-btn{display:inline-block;padding:9px 20px;border-radius:8px;font-size:.78rem;
-  font-weight:700;text-decoration:none;border:1px solid var(--amber);
-  color:var(--amber);transition:all .15s}
-.list-btn:hover{background:var(--amber);color:#000}
+.halving-table .h-now td{background:rgba(0,229,255,.04)}
 
 /* ── QUICK START ── */
-.start-bg{background:var(--s1);border-top:1px solid var(--b1);
-  border-bottom:1px solid var(--b1);padding:88px 24px}
+.start-bg{padding:96px 24px;background:var(--bg)}
 .start-inner{max-width:960px;margin:0 auto}
-.code-block{background:var(--bg);border:1px solid var(--b1);border-radius:12px;
-  padding:22px 26px;font-family:var(--mono);font-size:.82rem;
-  overflow-x:auto;margin:12px 0;line-height:1.8}
+.code-block{
+  background:var(--s1);border:1px solid var(--b1);border-radius:14px;
+  padding:24px 28px;font-family:var(--mono);font-size:.8rem;
+  overflow-x:auto;margin:10px 0;line-height:2
+}
 .co{color:var(--t3)}.cmd{color:var(--cyan)}.arg{color:var(--amber)}.out{color:var(--green)}
-.os-tab{display:inline-block;padding:6px 16px;border-radius:6px;font-size:.72rem;
-  font-family:var(--mono);margin-bottom:10px;font-weight:600;
-  background:var(--s2);border:1px solid var(--b1);color:var(--t2)}
+.os-label{
+  display:inline-block;padding:5px 14px;border-radius:6px;font-size:.7rem;
+  font-family:var(--mono);margin-bottom:8px;font-weight:600;
+  background:var(--s1);border:1px solid var(--b1);color:var(--t2)
+}
+.info-box{
+  background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);
+  border-radius:12px;padding:20px 24px;margin-top:20px
+}
+.info-box p{font-family:var(--mono);font-size:.8rem;color:var(--t2);line-height:2}
+.info-box span{color:var(--cyan)}
 
-/* ── COMMUNITY ── */
-.comm-bg{padding:88px 24px}
-.comm-inner{max-width:1160px;margin:0 auto;text-align:center}
-.comm-links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:40px}
-.comm-link{display:flex;align-items:center;gap:10px;padding:16px 28px;
-  border-radius:12px;text-decoration:none;font-weight:600;font-size:.9rem;
-  border:1px solid var(--b1);color:var(--t1);transition:all .2s;background:var(--s1)}
-.comm-link:hover{transform:translateY(-3px);border-color:var(--cyan);color:var(--cyan)}
-.comm-link .ci{font-size:1.4rem}
+/* ── LISTING ── */
+.list-bg{
+  background:var(--s1);border-top:1px solid var(--b1);
+  border-bottom:1px solid var(--b1);padding:96px 24px
+}
+.list-inner{max-width:1160px;margin:0 auto}
+.list-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px}
+@media(max-width:900px){.list-cards{grid-template-columns:1fr}}
+.lc{
+  background:var(--bg);border:1px solid var(--b1);border-radius:16px;
+  padding:28px;transition:all .2s
+}
+.lc:hover{border-color:var(--b2);transform:translateY(-2px)}
+.lc-icon{font-size:1.8rem;margin-bottom:14px}
+.lc-h{font-size:.95rem;font-weight:700;margin-bottom:8px;color:var(--amber)}
+.lc-p{font-size:.85rem;color:var(--t2);line-height:1.7;margin-bottom:18px}
+.lc-btn{
+  display:inline-block;padding:9px 20px;border-radius:8px;font-size:.76rem;
+  font-weight:700;text-decoration:none;border:1px solid var(--amber);
+  color:var(--amber);transition:all .15s;letter-spacing:.04em
+}
+.lc-btn:hover{background:var(--amber);color:#000}
+.specs-grid{
+  background:var(--s3);border:1px solid var(--b1);border-radius:14px;
+  padding:24px 28px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px
+}
+.spec-row{font-family:var(--mono);font-size:.82rem}
+.spec-row .sk{color:var(--t3)}
+.spec-row .sv{color:var(--t1)}
 
-/* ── LIVE STATS ROW ── */
-.stats-row{background:var(--s1);border-top:1px solid var(--b1);
-  border-bottom:1px solid var(--b1);padding:40px 24px}
-.stats-inner{max-width:1160px;margin:0 auto;
-  display:grid;grid-template-columns:repeat(6,1fr);gap:0}
+/* ── LIVE STATS ── */
+.stats-row{
+  background:var(--s3);border-top:1px solid var(--b1);
+  border-bottom:1px solid var(--b1);padding:40px 24px
+}
+.stats-inner{
+  max-width:1160px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(6,1fr)
+}
 @media(max-width:900px){.stats-inner{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:500px){.stats-inner{grid-template-columns:repeat(2,1fr)}}
 .stat-box{padding:20px;text-align:center;border-right:1px solid var(--b1)}
 .stat-box:last-child{border-right:none}
-.stat-label{font-size:.58rem;color:var(--t3);text-transform:uppercase;
-  letter-spacing:.12em;font-family:var(--mono);margin-bottom:6px}
-.stat-val{font-size:1.3rem;font-weight:700;font-family:var(--mono)}
-.stat-val.c{color:var(--cyan)}.stat-val.g{color:var(--green)}.stat-val.a{color:var(--amber)}
+.stat-label{
+  font-size:.56rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.14em;font-family:var(--mono);margin-bottom:6px
+}
+.stat-val{font-size:1.25rem;font-weight:700;font-family:var(--mono)}
+
+/* ── COMMUNITY ── */
+.comm-bg{padding:96px 24px}
+.comm-inner{max-width:1160px;margin:0 auto;text-align:center}
+.comm-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:40px}
+.comm-link{
+  display:flex;align-items:center;gap:12px;padding:16px 24px;
+  border-radius:12px;text-decoration:none;font-weight:600;font-size:.88rem;
+  border:1px solid var(--b1);color:var(--t1);transition:all .2s;background:var(--s1)
+}
+.comm-link:hover{transform:translateY(-3px);border-color:var(--cyan);color:var(--cyan)}
+.ci{font-size:1.3rem}
 
 /* ── FOOTER ── */
-footer{padding:44px 32px;border-top:1px solid var(--b1);max-width:100%}
-.foot-inner{max-width:1160px;margin:0 auto;
+footer{padding:48px 32px;border-top:1px solid var(--b1)}
+.foot-inner{
+  max-width:1160px;margin:0 auto;
   display:flex;justify-content:space-between;align-items:flex-start;
-  flex-wrap:wrap;gap:24px}
-.foot-brand .foot-logo{font-family:var(--mono);font-weight:800;font-size:1.2rem;
-  color:var(--cyan);margin-bottom:8px}
-.foot-brand p{font-size:.78rem;color:var(--t3);max-width:240px;line-height:1.6}
-.foot-col h4{font-size:.65rem;color:var(--t3);text-transform:uppercase;
-  letter-spacing:.12em;font-family:var(--mono);margin-bottom:14px}
-.foot-col a{display:block;font-size:.82rem;color:var(--t2);
-  text-decoration:none;margin-bottom:8px;transition:color .15s}
+  flex-wrap:wrap;gap:28px
+}
+.foot-logo{font-family:var(--mono);font-weight:800;font-size:1.1rem;color:var(--cyan);margin-bottom:10px}
+.foot-tagline{font-size:.78rem;color:var(--t3);max-width:240px;line-height:1.7}
+.foot-col h4{
+  font-size:.6rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.14em;font-family:var(--mono);margin-bottom:14px
+}
+.foot-col a{
+  display:block;font-size:.82rem;color:var(--t2);
+  text-decoration:none;margin-bottom:9px;transition:color .15s
+}
 .foot-col a:hover{color:var(--cyan)}
-.foot-bottom{max-width:1160px;margin:24px auto 0;padding-top:20px;
+.foot-bottom{
+  max-width:1160px;margin:24px auto 0;padding-top:20px;
   border-top:1px solid var(--b1);
-  display:flex;justify-content:space-between;align-items:center;
-  flex-wrap:wrap;gap:8px}
-.foot-copy{font-size:.7rem;color:var(--t3);font-family:var(--mono)}
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px
+}
+.foot-copy{font-size:.68rem;color:var(--t3);font-family:var(--mono)}
 
-/* ── MISC ── */
+/* ── RESPONSIVE ── */
 @media(max-width:600px){
   .ticker{flex-direction:column}
   .tick{border-right:none;border-bottom:1px solid var(--b1)}
   .tick:last-child{border-bottom:none}
   nav .nav-links .nlink{display:none}
-  nav .nav-links .nbtn{font-size:.72rem;padding:7px 14px}
-  .boost-grid{grid-template-columns:repeat(2,1fr)}
-  .steps-grid,.why-grid,.list-cards{grid-template-columns:1fr}
   .stats-inner{grid-template-columns:repeat(2,1fr)}
   .stat-box{border-right:none;border-bottom:1px solid var(--b1)}
+  .token-grid,.why-grid,.list-cards,.truth-cards,.ram-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -298,453 +446,373 @@ footer{padding:44px 32px;border-top:1px solid var(--b1);max-width:100%}
 
 <!-- ── NAV ── -->
 <nav>
-  <a class="nav-logo" href="/">PoLM <em>/</em> Mainnet</a>
+  <a class="nav-logo" href="/">
+    <span class="pulse"></span>PoLM / Mainnet
+  </a>
   <div class="nav-links">
-    <a class="nlink" href="#proof">Proof</a>
+    <a class="nlink" href="#how">How it works</a>
+    <a class="nlink" href="#epochs">Epochs</a>
     <a class="nlink" href="#tokenomics">Tokenomics</a>
-    <a class="nlink" href="#roadmap">Roadmap</a>
     <a class="nlink" href="#mine">Mine</a>
-    <a class="nlink" href="http://explorer.polm.com.br:5050">Explorer</a>
-    <a class="nbtn nbtn-list" href="#listing" style="margin-left:6px">List POLM</a>
-    <a class="nbtn nbtn-mine" href="#mine" style="margin-left:4px">⛏ Mine Now</a>
+    <a class="nlink" href="https://explorer.polm.com.br" target="_blank">Explorer</a>
+    <a class="nbtn nbtn-mine" href="#mine" style="margin-left:8px">⛏ Mine Now</a>
   </div>
 </nav>
 
 <!-- ── HERO ── -->
 <section class="hero">
-  <div class="hero-badge"><span class="live-dot"></span>Mainnet Live — Block mining active</div>
-  <h1>Proof of Legacy<br><span class="accent">Memory</span></h1>
+  <div class="hero-bg-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-badge">
+    <span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block"></span>
+    Mainnet Live — Mining active
+  </div>
+
+  <div class="hero-tagline">Mine with any RAM. Latency is truth.</div>
+
+  <h1>Proof of<br><span class="hl">Legacy Memory</span></h1>
+
   <p class="hero-sub">
     The first <strong>RAM-latency-bound</strong> Proof-of-Work.<br>
-    A 2006 Core 2 Duo with DDR2 mines <strong>52% of all blocks</strong> —<br>
-    beating every modern machine on the network. Physics can't be faked.
+    DDR2, DDR3, DDR4, DDR5 — every generation mines.<br>
+    Score = 1 / latency. <strong>Physics can't be faked.</strong>
   </p>
+
   <div class="hero-btns">
     <a class="btn btn-primary" href="#mine">⛏ Start Mining</a>
-    <a class="btn btn-secondary" href="http://explorer.polm.com.br:5050" target="_blank">🔍 Explorer</a>
-    <a class="btn btn-exchange" href="#listing">📈 List on Exchange</a>
-    <a class="btn btn-secondary" href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">GitHub</a>
+    <a class="btn btn-ghost" href="https://explorer.polm.com.br" target="_blank">🔍 Explorer</a>
+    <a class="btn btn-ghost" href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">GitHub</a>
+    <a class="btn btn-ghost" href="#listing">📈 List POLM</a>
   </div>
+
   <div class="ticker">
     <div class="tick">
       <div class="tick-label">Network</div>
       <div class="tick-val c" id="t-net">mainnet</div>
-      <div class="tick-sub">live</div>
     </div>
     <div class="tick">
       <div class="tick-label">Height</div>
       <div class="tick-val c" id="t-height">—</div>
-      <div class="tick-sub">blocks mined</div>
     </div>
     <div class="tick">
       <div class="tick-label">Supply</div>
       <div class="tick-val g" id="t-supply">—</div>
-      <div class="tick-sub">POLM minted</div>
     </div>
     <div class="tick">
       <div class="tick-label">Block Reward</div>
-      <div class="tick-val a" id="t-reward">50.00</div>
-      <div class="tick-sub">POLM / block</div>
+      <div class="tick-val a" id="t-reward">100.00</div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">Block Time</div>
+      <div class="tick-val">2 min</div>
     </div>
     <div class="tick">
       <div class="tick-label">Difficulty</div>
-      <div class="tick-val" id="t-diff">3</div>
-      <div class="tick-sub">target: 000…</div>
-    </div>
-    <div class="tick">
-      <div class="tick-label">DDR2 Boost</div>
-      <div class="tick-val" style="color:#fb923c">12×</div>
-      <div class="tick-sub">vs DDR4 baseline</div>
+      <div class="tick-val" id="t-diff">—</div>
     </div>
   </div>
 </section>
 
-<!-- ── PROOF ── -->
-<section class="section" id="proof">
-  <div class="section-eyebrow">Testnet validated — 816 blocks</div>
-  <h2 class="section-title">Old hardware wins. Mathematically.</h2>
-  <p class="section-desc">
-    These are real results from our testnet across 4 hardware generations.
-    The algorithm doesn't favor speed — it rewards <strong style="color:var(--cyan)">latency</strong>.
+<!-- ── HOW IT WORKS ── -->
+<section class="truth-bg" id="how">
+<div class="truth-inner">
+  <span class="eyebrow">The algorithm</span>
+  <h2 class="title">One formula. Pure physics.</h2>
+  <p class="desc">
+    No boosts. No artificial multipliers. No favoritism by RAM type.
+    The only variable that matters is your memory's raw latency.
   </p>
 
-  <table class="proof-table">
+  <div class="formula-hero">
+    <div class="formula-eq">score = 1 / latency_ns</div>
+    <div class="formula-label">
+      <span>Slower RAM → higher latency → more work per step → valid block</span><br>
+      <span>Faster RAM → lower latency → less work per step → still valid block</span><br>
+      <span>Every generation has its natural place. No exceptions.</span>
+    </div>
+  </div>
+
+  <div class="truth-cards">
+    <div class="tc">
+      <div class="tc-n">01</div>
+      <div class="tc-h">Build the Memory DAG</div>
+      <div class="tc-p">Each epoch seeds a pseudorandom buffer from chain state — starting at 256 MB, doubling every epoch. Every access is a real DRAM read. CPU cache is completely bypassed. No shortcut possible.</div>
+    </div>
+    <div class="tc">
+      <div class="tc-n">02</div>
+      <div class="tc-h">Sequential memory walk</div>
+      <div class="tc-p">100,000 steps per nonce, each depending on the previous. Impossible to parallelize. The only bottleneck is physical DRAM latency. Up to 4 threads allowed per miner.</div>
+    </div>
+    <div class="tc">
+      <div class="tc-n">03</div>
+      <div class="tc-h">Physics enforces the score</div>
+      <div class="tc-p">Your score is 1 divided by your average latency in nanoseconds. DDR2 at ~3800 ns scores differently than DDR5 at ~500 ns — but both contribute honestly to the network.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ── ANY RAM ── -->
+<section class="ram-bg" id="anyram">
+<div class="ram-inner">
+  <span class="eyebrow">Any generation. Any machine.</span>
+  <h2 class="title">Your RAM mines. Period.</h2>
+  <p class="desc">
+    PoLM doesn't pick winners by RAM type. Every generation competes on its own physics.
+    Older RAM is slower — it does more work per step. Newer RAM is faster — it processes more nonces.
+    The network needs both.
+  </p>
+
+  <div class="ram-grid">
+    <div class="rc rc-ddr2">
+      <div class="rc-type">Generation 1</div>
+      <div class="rc-icon">🖥️</div>
+      <div class="rc-name">DDR2</div>
+      <div class="rc-lat">~3500–8000 ns avg latency<br>High latency → high score/step<br>Any PC from 2004–2010</div>
+      <div class="rc-tag tag-any">✓ Mines now</div>
+    </div>
+    <div class="rc rc-ddr3">
+      <div class="rc-type">Generation 2</div>
+      <div class="rc-icon">💻</div>
+      <div class="rc-name">DDR3</div>
+      <div class="rc-lat">~1500–4000 ns avg latency<br>Balanced latency profile<br>Mainstream PCs 2010–2016</div>
+      <div class="rc-tag tag-any">✓ Mines now</div>
+    </div>
+    <div class="rc rc-ddr4">
+      <div class="rc-type">Generation 3</div>
+      <div class="rc-icon">⚡</div>
+      <div class="rc-name">DDR4</div>
+      <div class="rc-lat">~900–1900 ns avg latency<br>Lower latency → more nonces<br>Modern standard 2016–2022</div>
+      <div class="rc-tag tag-any">✓ Mines now</div>
+    </div>
+    <div class="rc rc-ddr5">
+      <div class="rc-type">Generation 4</div>
+      <div class="rc-icon">🚀</div>
+      <div class="rc-name">DDR5</div>
+      <div class="rc-lat">~500–900 ns avg latency<br>Very fast — high throughput<br>Latest hardware 2022+</div>
+      <div class="rc-tag tag-any">✓ Mines now</div>
+    </div>
+  </div>
+
+  <div class="ram-note">
+    <p>
+      <strong>No artificial boost. No penalty. No hidden multiplier.</strong><br>
+      DDR2 scores higher per nonce because it has higher latency — that's physics, not favoritism.<br>
+      DDR5 compensates with higher nonce throughput. The network is naturally balanced.
+    </p>
+  </div>
+</div>
+</section>
+
+<!-- ── EPOCHS ── -->
+<section class="epoch-bg" id="epochs">
+<div class="epoch-inner">
+  <span class="eyebrow">Hardware evolution</span>
+  <h2 class="title">Epochs force the future</h2>
+  <p class="desc">
+    Every 100,000 blocks (~138 days), the DAG doubles and the block reward halves.
+    More RAM required each epoch — driving a new hardware upgrade cycle,
+    just like GPUs transformed Bitcoin mining.
+  </p>
+
+  <table class="epoch-table">
     <thead>
       <tr>
-        <th>Rank</th><th>Hardware</th><th>RAM</th>
-        <th>Latency</th><th>Boost</th><th>Blocks</th><th>Share</th><th>Cost</th>
+        <th>Epoch</th>
+        <th>Blocks</th>
+        <th>Duration</th>
+        <th>DAG Size</th>
+        <th>Min RAM</th>
+        <th>Reward</th>
+        <th>Who mines?</th>
       </tr>
     </thead>
     <tbody>
-      <tr class="winner">
-        <td style="color:#fbbf24;font-weight:800">🥇 #1</td>
-        <td style="color:#fb923c;font-weight:600">Core 2 Duo (2006)</td>
-        <td><span style="background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.25);padding:3px 10px;border-radius:4px;font-size:.78rem;font-weight:700">DDR2</span></td>
-        <td style="color:var(--amber)">~3800 ns</td>
-        <td style="color:#fb923c;font-weight:800;font-size:1rem">12×</td>
-        <td style="color:var(--cyan)">428</td>
-        <td style="color:var(--green);font-weight:700">52.4% 🏆</td>
-        <td style="color:var(--t3)">~$5 used</td>
+      <tr class="ep-now">
+        <td>
+          Epoch 0
+          <span class="ep-badge ep-now-tag" style="margin-left:8px">← NOW</span>
+        </td>
+        <td>0 – 100k</td>
+        <td>~138 days</td>
+        <td style="color:var(--cyan);font-weight:700">256 MB</td>
+        <td>1 GB</td>
+        <td style="color:var(--green);font-weight:700">100 POLM</td>
+        <td>Any PC — even a 2004 machine</td>
       </tr>
       <tr>
-        <td style="color:#9ca3af">🥈 #2</td>
-        <td>i5 7th gen 4t</td>
-        <td><span style="background:rgba(34,211,238,.08);color:var(--cyan);border:1px solid rgba(34,211,238,.2);padding:3px 10px;border-radius:4px;font-size:.78rem;font-weight:700">DDR4</span></td>
-        <td style="color:var(--amber)">~1741 ns</td>
-        <td style="color:var(--cyan)">1×</td>
-        <td>284</td><td>34.8%</td><td style="color:var(--t3)">~$80</td>
+        <td>Epoch 1</td>
+        <td>100k – 200k</td>
+        <td>~138 days</td>
+        <td>512 MB</td>
+        <td>2 GB</td>
+        <td>50 POLM</td>
+        <td>Most laptops and desktops</td>
       </tr>
       <tr>
-        <td style="color:#cd7f32">🥉 #3</td>
-        <td>AMD 2t</td>
-        <td><span style="background:rgba(245,158,11,.08);color:#fbbf24;border:1px solid rgba(245,158,11,.2);padding:3px 10px;border-radius:4px;font-size:.78rem;font-weight:700">DDR3</span></td>
-        <td style="color:var(--amber)">~12988 ns</td>
-        <td style="color:#fbbf24;font-weight:700">10×</td>
-        <td>62</td><td>7.6%</td><td style="color:var(--t3)">~$10 used</td>
+        <td>Epoch 2</td>
+        <td>200k – 300k</td>
+        <td>~138 days</td>
+        <td>1 GB</td>
+        <td>4 GB</td>
+        <td>25 POLM</td>
+        <td>Standard modern PCs</td>
       </tr>
       <tr>
-        <td>#4</td>
-        <td>i5 12th gen 16t</td>
-        <td><span style="background:rgba(34,211,238,.08);color:var(--cyan);border:1px solid rgba(34,211,238,.2);padding:3px 10px;border-radius:4px;font-size:.78rem;font-weight:700">DDR4</span></td>
-        <td style="color:var(--amber)">~1060 ns</td>
-        <td style="color:var(--t3)">1× (−0.25 pen.)</td>
-        <td>43</td><td>5.3%</td><td style="color:var(--t3)">~$300</td>
+        <td>Epoch 3</td>
+        <td>300k – 400k</td>
+        <td>~138 days</td>
+        <td>2 GB</td>
+        <td>8 GB</td>
+        <td>12.5 POLM</td>
+        <td>Mid-range workstations</td>
+      </tr>
+      <tr>
+        <td>Epoch 4</td>
+        <td>400k – 500k</td>
+        <td>~138 days</td>
+        <td>4 GB</td>
+        <td>16 GB</td>
+        <td>6.25 POLM</td>
+        <td>High-end workstations</td>
+      </tr>
+      <tr>
+        <td>Epoch 5</td>
+        <td>500k – 600k</td>
+        <td>~138 days</td>
+        <td>8 GB</td>
+        <td>32 GB</td>
+        <td>3.12 POLM</td>
+        <td>Server-class machines</td>
+      </tr>
+      <tr>
+        <td>Epoch 6</td>
+        <td>600k – 700k</td>
+        <td>~138 days</td>
+        <td>16 GB</td>
+        <td>64 GB</td>
+        <td>1.56 POLM</td>
+        <td>Dedicated RAM rigs</td>
+      </tr>
+      <tr>
+        <td>Epoch 7 ⚡</td>
+        <td>700k – 800k</td>
+        <td>~138 days</td>
+        <td style="color:var(--amber);font-weight:700">32 GB</td>
+        <td style="color:var(--amber);font-weight:700">128 GB</td>
+        <td>0.78 POLM</td>
+        <td style="color:var(--amber)">RAM mining boards!</td>
+      </tr>
+      <tr>
+        <td>Epoch 8 🏭</td>
+        <td>800k – 900k</td>
+        <td>~138 days</td>
+        <td style="color:var(--red);font-weight:700">64 GB</td>
+        <td style="color:var(--red);font-weight:700">256 GB</td>
+        <td>0.39 POLM</td>
+        <td style="color:var(--red)">Industrial RAM hardware</td>
       </tr>
     </tbody>
   </table>
 
-  <div style="margin-bottom:48px;padding:20px 24px;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:12px;text-align:center">
-    <span style="color:var(--green);font-family:var(--mono);font-size:.88rem;font-weight:600">
-      💡 A $5 Core 2 Duo from 2006 outperforms a $300 modern i5 — 9.8× better ROI per dollar invested
+  <div style="margin-top:24px;padding:20px 24px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:12px;text-align:center">
+    <span style="font-family:var(--mono);font-size:.85rem;color:var(--t2)">
+      💡 Epoch 0 is the most accessible window. <strong style="color:var(--cyan)">Any machine with 1 GB RAM can mine today</strong> — DDR2 to DDR5.
     </span>
   </div>
-
-  <div class="boost-grid">
-    <div class="bc bc-ddr2">
-      <div class="bc-type">DDR2</div>
-      <div class="bc-boost">12×</div>
-      <div class="bc-lat">~3500–8000 ns · yr 0–2</div>
-      <div class="bc-tag tag-max">Max boost now</div>
-    </div>
-    <div class="bc bc-ddr3">
-      <div class="bc-type">DDR3</div>
-      <div class="bc-boost">10×</div>
-      <div class="bc-lat">~1500–4000 ns · yr 0–4</div>
-      <div class="bc-tag tag-ok">Strong legacy</div>
-    </div>
-    <div class="bc bc-ddr4">
-      <div class="bc-type">DDR4</div>
-      <div class="bc-boost">1×</div>
-      <div class="bc-lat">~900–1900 ns → 8× by yr 6</div>
-      <div class="bc-tag tag-base">Grows each halving</div>
-    </div>
-    <div class="bc bc-ddr5">
-      <div class="bc-type">DDR5</div>
-      <div class="bc-boost">0.5×</div>
-      <div class="bc-lat">~500–900 ns → 10× by yr 10</div>
-      <div class="bc-tag tag-pen">Penalized now</div>
-    </div>
-  </div>
+</div>
 </section>
 
 <!-- ── WHY POLM ── -->
 <section class="why-bg">
 <div class="why-inner">
-  <div class="section-eyebrow" style="text-align:center">For investors</div>
-  <h2 class="section-title" style="text-align:center;margin-bottom:14px">Why PoLM is different</h2>
-  <p class="section-desc" style="margin-bottom:48px">
-    Not another SHA-256 clone. A fundamentally new consensus mechanism
-    with a built-in hardware upgrade cycle.
-  </p>
+  <span class="eyebrow">Why PoLM</span>
+  <h2 class="title" style="margin-bottom:14px">A fundamentally new PoW</h2>
+  <p class="desc" style="margin-bottom:48px">Not another SHA-256 clone. Consensus grounded in the physics of DRAM.</p>
   <div class="why-grid">
-    <div class="why-card">
-      <div class="why-icon">⚗️</div>
-      <div class="why-title">Physics-based security</div>
-      <div class="why-text">
-        DRAM latency is a physical property — it cannot be faked, virtualized, or replicated in ASIC.
-        The gap between DDR2 and DDR5 is ~2.5×. In SHA-256, ASICs are 100,000× faster than CPUs.
-        PoLM is naturally ASIC-resistant by design.
-      </div>
+    <div class="wc">
+      <div class="wc-icon">⚗️</div>
+      <div class="wc-h">Physics-based security</div>
+      <div class="wc-p">DRAM latency is a physical property — it cannot be faked, virtualized, or replicated in ASIC. The variation between RAM generations is ~8×. In SHA-256, ASICs are 100,000× faster than CPUs. PoLM is naturally ASIC-resistant by design.</div>
     </div>
-    <div class="why-card">
-      <div class="why-icon">📦</div>
-      <div class="why-title">Built-in hardware cycle</div>
-      <div class="why-text">
-        Every 2 years, the DAG doubles. By year 12, mining requires 256GB of RAM —
-        creating demand for a new hardware category: <strong style="color:var(--cyan)">dedicated RAM mining motherboards</strong>,
-        exactly like GPUs transformed Bitcoin mining. A new industry.
-      </div>
+    <div class="wc">
+      <div class="wc-icon">📦</div>
+      <div class="wc-h">Built-in hardware cycle</div>
+      <div class="wc-p">Every ~138 days the DAG doubles. By Epoch 7, mining requires 128 GB RAM — creating demand for a new hardware category: dedicated RAM mining boards, exactly like GPUs transformed Bitcoin mining. A new industry emerges.</div>
     </div>
-    <div class="why-card">
-      <div class="why-icon">♻️</div>
-      <div class="why-title">Environmental narrative</div>
-      <div class="why-text">
-        Millions of DDR2/DDR3 machines are discarded yearly. PoLM gives them a second life —
-        turning e-waste into mining hardware. Strong ESG story for institutional investors
-        and media coverage.
-      </div>
+    <div class="wc">
+      <div class="wc-icon">♻️</div>
+      <div class="wc-h">Second life for e-waste</div>
+      <div class="wc-p">Millions of DDR2/DDR3 machines are discarded yearly. PoLM gives them a second life — turning e-waste into mining hardware. A strong ESG story for institutional investors, media, and the planet.</div>
     </div>
-    <div class="why-card">
-      <div class="why-icon">📊</div>
-      <div class="why-title">Fair tokenomics</div>
-      <div class="why-text">
-        <strong>210M max supply</strong> over 30+ years. <strong>50 POLM/block</strong> like Bitcoin.
-        Halving every 2 years. Founder allocation only <strong>5%</strong> locked for 5 years.
-        No pre-mine, no ICO, no VC allocation.
-      </div>
+    <div class="wc">
+      <div class="wc-icon">📊</div>
+      <div class="wc-h">Fair tokenomics</div>
+      <div class="wc-p">210M max supply. 100 POLM/block today, halving every epoch. Founder allocation is only 5%, locked for 5 years. No pre-mine, no ICO, no VC. Pure community mining from genesis.</div>
     </div>
-    <div class="why-card">
-      <div class="why-icon">🌍</div>
-      <div class="why-title">Decentralized from day one</div>
-      <div class="why-text">
-        Anyone with an old PC can mine. No expensive ASICs needed. 
-        No mining pools required. The network is accessible to people in
-        developing countries with old hardware — true democratization.
-      </div>
+    <div class="wc">
+      <div class="wc-icon">🌍</div>
+      <div class="wc-h">Truly decentralized</div>
+      <div class="wc-p">Any PC anywhere can mine today. No expensive ASICs. No mining pools required. In Epoch 0, even a 15-year-old laptop participates. Real democratization of Proof-of-Work.</div>
     </div>
-    <div class="why-card">
-      <div class="why-icon">🔬</div>
-      <div class="why-title">Validated algorithm</div>
-      <div class="why-text">
-        816 blocks mined across 4 hardware generations on testnet.
-        Results are deterministic and reproducible. All code is
-        open source (MIT). The math checks out — older RAM consistently
-        dominates newer hardware.
-      </div>
+    <div class="wc">
+      <div class="wc-icon">🔬</div>
+      <div class="wc-h">Open and auditable</div>
+      <div class="wc-p">All code is MIT licensed on GitHub. The algorithm is simple and auditable — no black boxes. The math is reproducible: latency determines score, epoch determines DAG, physics determines the rest.</div>
     </div>
   </div>
 </div>
 </section>
 
 <!-- ── TOKENOMICS ── -->
-<section class="section" id="tokenomics">
-  <div class="section-eyebrow">Economics</div>
-  <h2 class="section-title">Tokenomics</h2>
-  <p class="section-desc">
-    Designed like Bitcoin — fixed supply, predictable emission, halving every 2 years.
-    No inflation surprises.
-  </p>
+<section class="token-bg" id="tokenomics">
+<div class="token-inner">
+  <span class="eyebrow">Economics</span>
+  <h2 class="title" style="margin-bottom:14px">Tokenomics</h2>
+  <p class="desc" style="margin-bottom:48px">Fixed supply. Predictable emission. Epoch-based halving. No surprises.</p>
   <div class="token-grid">
     <div class="token-card">
-      <div class="token-title">Protocol parameters</div>
-      <table class="token-table">
-        <tr><td>Symbol</td><td>POLM</td></tr>
-        <tr><td>Max supply</td><td style="color:var(--cyan)">210,000,000</td></tr>
-        <tr><td>Block reward</td><td style="color:var(--green)">50 POLM (now)</td></tr>
-        <tr><td>Halving</td><td>Every 2 years</td></tr>
-        <tr><td>Block time</td><td>30 seconds</td></tr>
-        <tr><td>Algorithm</td><td>PoLM (RAM-latency)</td></tr>
-        <tr><td>Hash</td><td>SHA3-256</td></tr>
-        <tr><td>Signatures</td><td>ECDSA secp256k1</td></tr>
-        <tr><td>Founder alloc</td><td style="color:var(--amber)">5% · 5yr lock</td></tr>
-        <tr><td>Pre-mine</td><td style="color:var(--green)">None</td></tr>
-        <tr><td>ICO/VC</td><td style="color:var(--green)">None</td></tr>
-      </table>
+      <div class="token-label">Protocol parameters</div>
+      <div class="trow"><span class="tk">Symbol</span><span class="tv">POLM</span></div>
+      <div class="trow"><span class="tk">Max supply</span><span class="tv" style="color:var(--cyan)">210,000,000</span></div>
+      <div class="trow"><span class="tk">Block reward (Epoch 0)</span><span class="tv" style="color:var(--green)">100 POLM</span></div>
+      <div class="trow"><span class="tk">Halving interval</span><span class="tv">100,000 blocks (~138d)</span></div>
+      <div class="trow"><span class="tk">Block time</span><span class="tv">2 minutes</span></div>
+      <div class="trow"><span class="tk">Algorithm</span><span class="tv">PoLM v2.0 (RAM-latency)</span></div>
+      <div class="trow"><span class="tk">Score function</span><span class="tv">1 / latency_ns</span></div>
+      <div class="trow"><span class="tk">Max threads</span><span class="tv">4 per miner</span></div>
+      <div class="trow"><span class="tk">Hash</span><span class="tv">SHA3-256</span></div>
+      <div class="trow"><span class="tk">Signatures</span><span class="tv">ECDSA secp256k1</span></div>
+      <div class="trow"><span class="tk">Founder alloc</span><span class="tv" style="color:var(--amber)">5% · 5yr lock</span></div>
+      <div class="trow"><span class="tk">Pre-mine / ICO</span><span class="tv" style="color:var(--green)">None</span></div>
     </div>
     <div class="token-card">
-      <div class="token-title">Emission schedule</div>
+      <div class="token-label">Emission schedule by epoch</div>
       <table class="halving-table">
         <thead>
-          <tr><th>Period</th><th>Year</th><th>Reward</th><th>Supply</th></tr>
+          <tr><th>Epoch</th><th>~Days</th><th>Reward</th><th>POLM minted</th></tr>
         </thead>
         <tbody>
-          <tr class="current">
-            <td style="color:var(--cyan);font-weight:700">Halving 1 ←</td>
-            <td>0–2</td>
-            <td style="color:var(--green);font-weight:700">50 POLM</td>
-            <td>+105M</td>
+          <tr class="h-now">
+            <td style="color:var(--cyan);font-weight:700">0 ← Now</td>
+            <td>0–138</td>
+            <td style="color:var(--green);font-weight:700">100 POLM</td>
+            <td>+50M</td>
           </tr>
-          <tr><td>Halving 2</td><td>2–4</td><td>25 POLM</td><td>+52.5M</td></tr>
-          <tr><td>Halving 3</td><td>4–6</td><td>12.5 POLM</td><td>+26.2M</td></tr>
-          <tr><td>Halving 4</td><td>6–8</td><td>6.25 POLM</td><td>+13.1M</td></tr>
-          <tr><td>Halving 5</td><td>8–10</td><td>3.125 POLM</td><td>+6.6M</td></tr>
-          <tr><td>Halving 6+</td><td>10+</td><td>decreasing</td><td>→ 210M</td></tr>
+          <tr><td>1</td><td>138–276</td><td>50 POLM</td><td>+25M</td></tr>
+          <tr><td>2</td><td>276–414</td><td>25 POLM</td><td>+12.5M</td></tr>
+          <tr><td>3</td><td>414–552</td><td>12.5 POLM</td><td>+6.25M</td></tr>
+          <tr><td>4</td><td>552–690</td><td>6.25 POLM</td><td>+3.12M</td></tr>
+          <tr><td>5+</td><td>690+</td><td>decreasing</td><td>→ 210M</td></tr>
         </tbody>
       </table>
-      <div style="margin-top:16px;padding:14px;background:rgba(34,211,238,.05);border-radius:8px;border:1px solid rgba(34,211,238,.1)">
-        <span style="font-family:var(--mono);font-size:.75rem;color:var(--t2)">
-          💎 At current 50 POLM/block: <strong style="color:var(--cyan)">~1,440 POLM</strong> minted per day.
-          Total supply takes <strong style="color:var(--cyan)">30+ years</strong> to fully mine.
+      <div style="margin-top:18px;padding:16px;background:rgba(0,229,255,.04);border-radius:10px;border:1px solid rgba(0,229,255,.1)">
+        <span style="font-family:var(--mono);font-size:.78rem;color:var(--t2)">
+          📦 Epoch 0: <strong style="color:var(--cyan)">~720 POLM/day</strong> minted at 100 POLM/block every 2 min.<br>
+          Full supply takes <strong style="color:var(--cyan)">30+ years</strong> to mine completely.
         </span>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── ROADMAP ── -->
-<section class="roadmap-bg" id="roadmap">
-<div class="roadmap-inner">
-  <div class="section-eyebrow" style="text-align:center">Hardware evolution</div>
-  <h2 class="section-title" style="text-align:center;margin-bottom:14px">The RAM Mining Revolution</h2>
-  <p class="section-desc" style="margin-bottom:48px">
-    Every 2 years the DAG doubles, forcing hardware upgrades. By year 12,
-    the market will need <strong style="color:var(--amber)">256GB RAM mining boards</strong> —
-    a completely new hardware category, like GPU mining cards.
-  </p>
-  <table class="rm-table">
-    <thead>
-      <tr>
-        <th>Year</th><th>Halving</th><th>DAG</th><th>Min RAM</th>
-        <th>DDR2</th><th>DDR3</th><th>DDR4</th><th>DDR5</th><th>DDR6</th><th>Hardware needed</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="rm-now">
-        <td style="color:var(--cyan);font-weight:700">0–2 ← NOW</td>
-        <td>1</td><td>256 MB</td><td>4 GB</td>
-        <td style="color:#fb923c;font-weight:700">12×</td>
-        <td style="color:#fbbf24;font-weight:700">10×</td>
-        <td>1×</td><td style="color:var(--t3)">0.5×</td><td style="color:var(--t3)">—</td>
-        <td>Any old PC ✓</td>
-      </tr>
-      <tr class="rm-y2">
-        <td>2–4</td><td>2</td><td>512 MB</td><td>8 GB</td>
-        <td style="color:#fb923c">10×</td><td style="color:#fbbf24">8×</td>
-        <td style="color:var(--cyan)">4×</td><td>2×</td><td style="color:var(--t3)">0.5×</td>
-        <td>DDR4 becomes viable</td>
-      </tr>
-      <tr>
-        <td>4–6</td><td>3</td><td>1 GB</td><td>16 GB</td>
-        <td>6×</td><td>5×</td>
-        <td style="color:var(--cyan);font-weight:700">6×</td>
-        <td style="color:var(--amber)">4×</td><td>1×</td>
-        <td>DDR4 workstations</td>
-      </tr>
-      <tr>
-        <td>6–8</td><td>4</td><td>2 GB</td><td>32 GB</td>
-        <td>3×</td><td>3×</td>
-        <td style="color:var(--cyan);font-weight:700">8×</td>
-        <td style="color:var(--amber);font-weight:700">6×</td><td>2×</td>
-        <td>High-end workstations</td>
-      </tr>
-      <tr>
-        <td>8–10</td><td>5</td><td>4 GB</td><td>64 GB</td>
-        <td style="color:var(--t3)">2×</td><td style="color:var(--t3)">2×</td>
-        <td>6×</td>
-        <td style="color:var(--purple);font-weight:700">8×</td>
-        <td style="color:var(--green)">4×</td>
-        <td>Server-class RAM rigs</td>
-      </tr>
-      <tr>
-        <td>10–12</td><td>6</td><td>8 GB</td><td>128 GB</td>
-        <td style="color:var(--t3)">1×</td><td style="color:var(--t3)">1×</td>
-        <td>4×</td>
-        <td style="color:var(--purple);font-weight:700">10×</td>
-        <td style="color:var(--cyan);font-weight:700">8×</td>
-        <td>Dedicated RAM servers</td>
-      </tr>
-      <tr class="rm-board">
-        <td style="color:var(--amber);font-weight:700">12–14 ⚡</td>
-        <td>7</td><td style="color:var(--amber)">16 GB</td>
-        <td style="color:var(--amber);font-weight:700">256 GB</td>
-        <td style="color:var(--t3)">0.5×</td><td style="color:var(--t3)">0.5×</td>
-        <td>3×</td><td>8×</td>
-        <td style="color:var(--cyan);font-weight:700">12×</td>
-        <td style="color:var(--amber);font-weight:700">⚡ RAM mining boards!</td>
-      </tr>
-      <tr>
-        <td style="color:var(--red)">14+</td>
-        <td>8+</td><td style="color:var(--red)">32 GB+</td>
-        <td style="color:var(--red);font-weight:700">512 GB+</td>
-        <td style="color:var(--t3)">0.2×</td><td style="color:var(--t3)">0.2×</td>
-        <td>2×</td><td>6×</td>
-        <td style="color:var(--cyan)">10×</td>
-        <td style="color:var(--red)">New hardware industry</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-</section>
-
-<!-- ── ALGORITHM ── -->
-<section class="algo-bg">
-<div class="algo-inner">
-  <div class="section-eyebrow" style="text-align:center">Technical</div>
-  <h2 class="section-title" style="text-align:center;margin-bottom:14px">How PoLM works</h2>
-  <p class="section-desc" style="margin-bottom:40px">
-    The algorithm is simple, auditable, and rooted in physics.
-    No proprietary hardware advantage possible.
-  </p>
-  <div class="formula-box">
-    <div class="formula-eq">score = (1 / latency_ns) × boost × thread_penalty</div>
-    <div class="formula-note">boost = (latency_ns / 1000)^0.8 · DDR2 at 3800ns → ~12× effective · 16 threads → 0.25× penalty</div>
-  </div>
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-n">01</div>
-      <div class="step-h">Build the Memory DAG</div>
-      <div class="step-p">Each epoch seeds a 256MB pseudorandom buffer from chain state. Every access is a real DRAM read — CPU cache is completely defeated. Cannot be optimized away.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-n">02</div>
-      <div class="step-h">Sequential memory walk</div>
-      <div class="step-p">100,000 steps per nonce, each depending on the previous. Impossible to parallelize. The only bottleneck is physical DRAM latency — older RAM is slower, scoring higher.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-n">03</div>
-      <div class="step-h">Physics enforces fairness</div>
-      <div class="step-p">DDR2 at ~3800ns gets ~12× while DDR4 at ~1060ns gets ~1×. This gap cannot be faked or replicated in silicon. The algorithm's security model is grounded in physics.</div>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- ── EXCHANGES / LISTING ── -->
-<section class="list-bg" id="listing">
-<div class="list-inner">
-  <div class="section-eyebrow" style="text-align:center">For exchanges</div>
-  <h2 class="section-title" style="text-align:center;margin-bottom:14px">List POLM</h2>
-  <p class="section-desc" style="margin-bottom:48px">
-    PoLM is a unique asset with a strong narrative — the only cryptocurrency
-    where old hardware earns more than new hardware. Perfect for listing.
-  </p>
-  <div class="list-cards">
-    <div class="list-card">
-      <div class="list-icon">📊</div>
-      <div class="list-title">CoinMarketCap / CoinGecko</div>
-      <div class="list-text">
-        Mainnet is live with real blocks being mined. Node API fully functional.
-        All data endpoints available for integration. POLM is ready for listing.
-      </div>
-      <a class="list-btn" href="mailto:contact@polm.com.br?subject=PoLM CMC/CoinGecko Listing">Request listing →</a>
-    </div>
-    <div class="list-card">
-      <div class="list-icon">🏦</div>
-      <div class="list-title">Centralized Exchanges (CEX)</div>
-      <div class="list-text">
-        ECDSA secp256k1 signatures. BIP-39/BIP-44 HD wallet support.
-        REST API with standard blockchain endpoints. 30-second block times.
-        Easy integration with existing infrastructure.
-      </div>
-      <a class="list-btn" href="mailto:contact@polm.com.br?subject=PoLM CEX Listing">Contact for listing →</a>
-    </div>
-    <div class="list-card">
-      <div class="list-icon">🔄</div>
-      <div class="list-title">Decentralized Exchanges (DEX)</div>
-      <div class="list-text">
-        Trust Wallet listing in progress. MetaMask integration planned.
-        Open source code for auditing. MIT license.
-        No restrictions on trading or market making.
-      </div>
-      <a class="list-btn" href="mailto:contact@polm.com.br?subject=PoLM DEX Integration">Get in touch →</a>
-    </div>
-  </div>
-
-  <div style="margin-top:32px;padding:24px 28px;background:var(--s1);border:1px solid var(--b1);border-radius:14px">
-    <div style="font-family:var(--mono);font-size:.65rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px">Technical specs for integration</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Symbol:</span> <span style="color:var(--cyan)">POLM</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Decimals:</span> <span style="color:var(--t1)">8</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Block time:</span> <span style="color:var(--t1)">30 seconds</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Confirmations:</span> <span style="color:var(--t1)">6 recommended</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Max supply:</span> <span style="color:var(--t1)">210,000,000</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Algorithm:</span> <span style="color:var(--t1)">PoLM (custom)</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Signatures:</span> <span style="color:var(--t1)">ECDSA secp256k1</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">HD wallet:</span> <span style="color:var(--t1)">BIP-39 / BIP-44</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Node API:</span> <span style="color:var(--cyan)">node1.polm.com.br:6060</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Coin type:</span> <span style="color:var(--t1)">SLIP-44 #637</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">License:</span> <span style="color:var(--green)">MIT (open source)</span></div>
-      <div style="font-family:var(--mono);font-size:.82rem"><span style="color:var(--t3)">Contact:</span> <span style="color:var(--cyan)">contact@polm.com.br</span></div>
     </div>
   </div>
 </div>
@@ -756,58 +824,103 @@ footer{padding:44px 32px;border-top:1px solid var(--b1);max-width:100%}
   <div class="stat-box"><div class="stat-label">Blocks</div><div class="stat-val c" id="s-blocks">—</div></div>
   <div class="stat-box"><div class="stat-label">Supply</div><div class="stat-val g" id="s-supply">—</div></div>
   <div class="stat-box"><div class="stat-label">Max Supply</div><div class="stat-val">210M</div></div>
-  <div class="stat-box"><div class="stat-label">Block Reward</div><div class="stat-val a" id="s-reward">50 POLM</div></div>
-  <div class="stat-box"><div class="stat-label">Block Time</div><div class="stat-val">30s</div></div>
-  <div class="stat-box"><div class="stat-label">Difficulty</div><div class="stat-val" id="s-diff">3</div></div>
+  <div class="stat-box"><div class="stat-label">Block Reward</div><div class="stat-val a" id="s-reward">100 POLM</div></div>
+  <div class="stat-box"><div class="stat-label">Block Time</div><div class="stat-val">2 min</div></div>
+  <div class="stat-box"><div class="stat-label">Difficulty</div><div class="stat-val" id="s-diff">—</div></div>
 </div>
 </section>
 
 <!-- ── QUICK START ── -->
 <section class="start-bg" id="mine">
 <div class="start-inner">
-  <div class="section-eyebrow" style="text-align:center">For miners</div>
-  <h2 class="section-title" style="text-align:center;margin-bottom:14px">Start mining in 3 commands</h2>
-  <p class="section-desc" style="margin-bottom:40px">
-    Any PC with DDR2/DDR3/DDR4 RAM can mine. No special hardware needed.
-    Old machines earn <strong style="color:var(--cyan)">up to 12× more</strong> than modern ones.
+  <span class="eyebrow" style="text-align:center;display:block">For miners</span>
+  <h2 class="title" style="margin-bottom:14px">Start in 3 commands</h2>
+  <p class="desc" style="margin-bottom:40px">
+    Any PC. Any RAM. DDR2 to DDR5. No special hardware, no pool, no fee.
+    Your machine mines directly against the network.
   </p>
 
-  <div class="os-tab">Linux / macOS</div>
+  <div class="os-label">Linux / macOS</div>
   <div class="code-block">
-    <span class="co"># Clone and install</span><br>
+    <span class="co"># 1. Clone the repository</span><br>
     <span class="cmd">git clone</span> <span class="arg">https://github.com/proof-of-legacy/Proof-of-Legacy-Memory.git</span><br>
     <span class="cmd">cd</span> Proof-of-Legacy-Memory &amp;&amp; <span class="cmd">bash</span> scripts/install.sh<br><br>
-    <span class="co"># Create your wallet (saves 24-word seed phrase)</span><br>
-    <span class="cmd">python3</span> polm_bip39.py <span class="arg">new "My Mining Wallet"</span><br><br>
-    <span class="co"># Start mining (replace DDR2 with your RAM type)</span><br>
-    <span class="cmd">python3</span> polm.py <span class="arg">miner</span> http://node1.polm.com.br:6060 <span class="arg">YOUR_ADDRESS DDR2</span><br><br>
-    <span class="out">[Miner] #1  diff=3  reward=50.0 POLM  DAG=256MB  DDR2  boost=12×</span><br>
-    <span class="out">[Miner] Block #42 found!  Hash: 000a...  Status: ACCEPTED 🎉</span>
+    <span class="co"># 2. Generate your wallet (saves 24-word seed phrase)</span><br>
+    <span class="cmd">python3</span> polm_bip39.py <span class="arg">new "My Wallet"</span><br><br>
+    <span class="co"># 3. Start mining — any RAM type, no arguments needed</span><br>
+    <span class="cmd">python3</span> polm.py <span class="arg">miner</span> https://polm.com.br/api/ <span class="arg">YOUR_ADDRESS</span><br><br>
+    <span class="out">[Miner] Epoch=0  DAG=256MB  Threads=4  Score=1/latency_ns</span><br>
+    <span class="out">[Miner] Block #7 found!  Reward=100.0 POLM  Status: ACCEPTED 🎉</span>
   </div>
 
-  <div class="os-tab" style="margin-top:20px">Windows 10/11</div>
+  <div class="os-label" style="margin-top:20px">Windows 10/11</div>
   <div class="code-block">
     <span class="co">:: 1. Install Python 3.9+ from python.org (check "Add Python to PATH")</span><br>
     <span class="co">:: 2. Double-click: scripts\install.bat</span><br>
-    <span class="co">:: 3. Double-click: start_all.bat</span><br><br>
-    <span class="out">→ Wallet UI opens at http://localhost:7070</span><br>
-    <span class="out">→ Explorer opens at http://localhost:5050</span><br>
-    <span class="out">→ Mining starts automatically</span>
+    <span class="co">:: 3. Double-click: start_miner.bat</span><br><br>
+    <span class="out">→ Mining starts automatically</span><br>
+    <span class="out">→ Explorer at http://localhost:5050</span>
   </div>
 
-  <div style="background:rgba(34,211,238,.04);border:1px solid rgba(34,211,238,.12);border-radius:12px;padding:20px 24px;margin-top:20px">
-    <div style="font-family:var(--mono);font-size:.72rem;color:var(--t3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.1em">Auto-detect your RAM type</div>
-    <div style="font-family:var(--mono);font-size:.82rem;color:var(--t2)">
-      Linux: <span style="color:var(--cyan)">sudo dmidecode -t memory | grep Type:</span><br>
-      Windows: <span style="color:var(--cyan)">wmic memorychip get memorytype</span><br>
-      Or let PoLM detect automatically — run <span style="color:var(--cyan)">python3 polm.py info</span>
-    </div>
+  <div class="info-box">
+    <p>
+      <strong style="color:var(--t1)">No RAM type configuration needed.</strong><br>
+      PoLM detects your hardware automatically and computes score = 1/latency_ns.<br>
+      To check your RAM: Linux: <span>sudo dmidecode -t memory | grep Type:</span><br>
+      Windows: <span>wmic memorychip get memorytype</span> &nbsp;·&nbsp; Or: <span>python3 polm.py info</span>
+    </p>
   </div>
 
   <div style="text-align:center;margin-top:36px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
     <a class="btn btn-primary" href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">View on GitHub</a>
-    <a class="btn btn-secondary" href="http://explorer.polm.com.br:5050" target="_blank">Open Explorer</a>
-    <a class="btn btn-secondary" href="http://node1.polm.com.br:6060" target="_blank">Node API</a>
+    <a class="btn btn-ghost" href="https://explorer.polm.com.br" target="_blank">Open Explorer</a>
+    <a class="btn btn-ghost" href="https://polm.com.br/api/" target="_blank">Node API</a>
+  </div>
+</div>
+</section>
+
+<!-- ── LISTING ── -->
+<section class="list-bg" id="listing">
+<div class="list-inner">
+  <span class="eyebrow" style="text-align:center;display:block">For exchanges</span>
+  <h2 class="title" style="margin-bottom:14px">List POLM</h2>
+  <p class="desc" style="margin-bottom:48px">
+    A unique asset with a clear narrative — the only PoW cryptocurrency
+    where RAM latency is the sole consensus mechanism.
+  </p>
+  <div class="list-cards">
+    <div class="lc">
+      <div class="lc-icon">📊</div>
+      <div class="lc-h">CoinMarketCap / CoinGecko</div>
+      <div class="lc-p">Mainnet live with real blocks. Node API fully functional with standard blockchain endpoints ready for integration.</div>
+      <a class="lc-btn" href="mailto:contact@polm.com.br?subject=PoLM CMC/CoinGecko Listing">Request listing →</a>
+    </div>
+    <div class="lc">
+      <div class="lc-icon">🏦</div>
+      <div class="lc-h">Centralized Exchanges (CEX)</div>
+      <div class="lc-p">ECDSA secp256k1 signatures. BIP-39/BIP-44 HD wallet. REST API with standard endpoints. 2-minute block time. Easy integration.</div>
+      <a class="lc-btn" href="mailto:contact@polm.com.br?subject=PoLM CEX Listing">Contact for listing →</a>
+    </div>
+    <div class="lc">
+      <div class="lc-icon">🔄</div>
+      <div class="lc-h">DEX &amp; Bridge</div>
+      <div class="lc-p">BSC bridge deployed. Polygon migration in progress (~$0.001/tx). Open source, MIT license, no restrictions on market making.</div>
+      <a class="lc-btn" href="mailto:contact@polm.com.br?subject=PoLM DEX Integration">Get in touch →</a>
+    </div>
+  </div>
+  <div class="specs-grid">
+    <div style="font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;font-family:var(--mono);grid-column:1/-1;margin-bottom:4px">Technical specs for integration</div>
+    <div class="spec-row"><span class="sk">Symbol: </span><span class="sv" style="color:var(--cyan)">POLM</span></div>
+    <div class="spec-row"><span class="sk">Decimals: </span><span class="sv">8</span></div>
+    <div class="spec-row"><span class="sk">Block time: </span><span class="sv">2 minutes</span></div>
+    <div class="spec-row"><span class="sk">Confirmations: </span><span class="sv">6 recommended</span></div>
+    <div class="spec-row"><span class="sk">Max supply: </span><span class="sv">210,000,000</span></div>
+    <div class="spec-row"><span class="sk">Algorithm: </span><span class="sv">PoLM v2.0 (RAM-latency)</span></div>
+    <div class="spec-row"><span class="sk">Signatures: </span><span class="sv">ECDSA secp256k1</span></div>
+    <div class="spec-row"><span class="sk">HD wallet: </span><span class="sv">BIP-39 / BIP-44</span></div>
+    <div class="spec-row"><span class="sk">Node API: </span><span class="sv" style="color:var(--cyan)">polm.com.br/api/</span></div>
+    <div class="spec-row"><span class="sk">License: </span><span class="sv" style="color:var(--green)">MIT open source</span></div>
+    <div class="spec-row"><span class="sk">Contact: </span><span class="sv" style="color:var(--cyan)">contact@polm.com.br</span></div>
   </div>
 </div>
 </section>
@@ -815,30 +928,27 @@ footer{padding:44px 32px;border-top:1px solid var(--b1);max-width:100%}
 <!-- ── COMMUNITY ── -->
 <section class="comm-bg">
 <div class="comm-inner">
-  <div class="section-eyebrow">Community</div>
-  <h2 class="section-title">Join the network</h2>
-  <p class="section-desc">
-    PoLM is an open, community-driven project. All code is MIT licensed.
-    Contributors, miners, investors and exchanges are welcome.
-  </p>
+  <span class="eyebrow">Community</span>
+  <h2 class="title">Join the network</h2>
+  <p class="desc">Open, community-driven, MIT licensed. Miners, developers, exchanges and investors welcome.</p>
   <div class="comm-links">
     <a class="comm-link" href="https://x.com/polm2026" target="_blank">
-      <span class="ci">𝕏</span><div><strong>@polm2026</strong><br><span style="font-size:.75rem;color:var(--t3)">Project updates</span></div>
+      <span class="ci">𝕏</span><div><strong>@polm2026</strong><br><span style="font-size:.72rem;color:var(--t3)">Project updates</span></div>
     </a>
     <a class="comm-link" href="https://x.com/aluisiofer" target="_blank">
-      <span class="ci">👤</span><div><strong>@aluisiofer</strong><br><span style="font-size:.75rem;color:var(--t3)">Founder</span></div>
+      <span class="ci">👤</span><div><strong>@aluisiofer</strong><br><span style="font-size:.72rem;color:var(--t3)">Founder</span></div>
     </a>
     <a class="comm-link" href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory" target="_blank">
-      <span class="ci">⚙️</span><div><strong>GitHub</strong><br><span style="font-size:.75rem;color:var(--t3)">Open source · MIT</span></div>
+      <span class="ci">⚙️</span><div><strong>GitHub</strong><br><span style="font-size:.72rem;color:var(--t3)">Open source · MIT</span></div>
     </a>
-    <a class="comm-link" href="http://explorer.polm.com.br:5050" target="_blank">
-      <span class="ci">🔍</span><div><strong>Explorer</strong><br><span style="font-size:.75rem;color:var(--t3)">Live blockchain data</span></div>
+    <a class="comm-link" href="https://explorer.polm.com.br" target="_blank">
+      <span class="ci">🔍</span><div><strong>Explorer</strong><br><span style="font-size:.72rem;color:var(--t3)">Live blockchain data</span></div>
     </a>
-    <a class="comm-link" href="http://node1.polm.com.br:6060" target="_blank">
-      <span class="ci">🌐</span><div><strong>Node API</strong><br><span style="font-size:.75rem;color:var(--t3)">REST · JSON · Open</span></div>
+    <a class="comm-link" href="https://polm.com.br/api/" target="_blank">
+      <span class="ci">🌐</span><div><strong>Node API</strong><br><span style="font-size:.72rem;color:var(--t3)">REST · JSON · Open</span></div>
     </a>
     <a class="comm-link" href="mailto:contact@polm.com.br">
-      <span class="ci">✉️</span><div><strong>contact@polm.com.br</strong><br><span style="font-size:.75rem;color:var(--t3)">Listings · Partnerships</span></div>
+      <span class="ci">✉️</span><div><strong>contact@polm.com.br</strong><br><span style="font-size:.72rem;color:var(--t3)">Listings · Partnerships</span></div>
     </a>
   </div>
 </div>
@@ -847,15 +957,15 @@ footer{padding:44px 32px;border-top:1px solid var(--b1);max-width:100%}
 <!-- ── FOOTER ── -->
 <footer>
 <div class="foot-inner">
-  <div class="foot-brand">
+  <div>
     <div class="foot-logo">PoLM</div>
-    <p>Proof of Legacy Memory — the first RAM-latency-bound Proof-of-Work. Old hardware, new value.</p>
+    <div class="foot-tagline">Proof of Legacy Memory — the first RAM-latency-bound Proof-of-Work. Any RAM mines. Latency is truth.</div>
   </div>
   <div class="foot-col">
     <h4>Network</h4>
-    <a href="http://explorer.polm.com.br:5050" target="_blank">Block Explorer</a>
-    <a href="http://node1.polm.com.br:6060" target="_blank">Node API</a>
-    <a href="http://node1.polm.com.br:6060/getwork" target="_blank">Mining API</a>
+    <a href="https://explorer.polm.com.br" target="_blank">Block Explorer</a>
+    <a href="https://polm.com.br/api/" target="_blank">Node API</a>
+    <a href="https://polm.com.br/api/getwork" target="_blank">Mining API</a>
   </div>
   <div class="foot-col">
     <h4>Developers</h4>
@@ -872,43 +982,42 @@ footer{padding:44px 32px;border-top:1px solid var(--b1);max-width:100%}
   <div class="foot-col">
     <h4>Legal</h4>
     <a href="https://github.com/proof-of-legacy/Proof-of-Legacy-Memory/blob/main/LICENSE" target="_blank">MIT License</a>
-    <a href="#" style="color:var(--t3);cursor:default">Experimental mainnet</a>
-    <a href="#" style="color:var(--t3);cursor:default">Not financial advice</a>
+    <a style="color:var(--t3);cursor:default">Experimental mainnet</a>
+    <a style="color:var(--t3);cursor:default">Not financial advice</a>
   </div>
 </div>
 <div class="foot-bottom">
-  <div class="foot-copy">© 2026 Aluísio Fernandes (Aluminium) · MIT License · Experimental Mainnet</div>
-  <div class="foot-copy">Genesis: 87df8a87c7befd2cde053569ed89c03f6502b33f4a910bb47284e66277a77fa5</div>
+  <div class="foot-copy">© 2026 Aluísio Fernandes (Aluminium) · MIT License · Experimental Mainnet · v2.0.0</div>
+  <div class="foot-copy">Genesis: 2026-03-22 · Score = 1/latency_ns · Any RAM mines</div>
 </div>
 </footer>
 
 <script>
-const NODE = 'http://node1.polm.com.br:6060';
+const NODE = 'https://polm.com.br/api/';
 
 async function loadStats(){
   try{
-    const d = await fetch(NODE+'/').then(r=>r.json());
+    const d = await fetch(NODE).then(r=>r.json());
     const h = Number(d.height||0);
     const s = Number(d.total_supply||0);
-    const r = Number(d.next_reward||50);
+    const r = Number(d.next_reward||100);
+    const diff = d.difficulty||'—';
 
-    // Hero ticker
-    document.getElementById('t-net').textContent = d.network||'mainnet';
+    document.getElementById('t-net').textContent    = d.network||'mainnet';
     document.getElementById('t-height').textContent = h.toLocaleString('en');
     document.getElementById('t-supply').textContent = s.toLocaleString('en',{maximumFractionDigits:0})+' POLM';
     document.getElementById('t-reward').textContent = r.toFixed(2);
-    document.getElementById('t-diff').textContent = d.difficulty||3;
+    document.getElementById('t-diff').textContent   = diff;
 
-    // Stats row
     document.getElementById('s-blocks').textContent = h.toLocaleString('en');
     document.getElementById('s-supply').textContent = s.toLocaleString('en',{maximumFractionDigits:0});
     document.getElementById('s-reward').textContent = r.toFixed(2)+' POLM';
-    document.getElementById('s-diff').textContent = d.difficulty||3;
+    document.getElementById('s-diff').textContent   = diff;
   }catch(e){}
 }
 
 loadStats();
-setInterval(loadStats, 12000);
+setInterval(loadStats,15000);
 </script>
 </body>
 </html>
