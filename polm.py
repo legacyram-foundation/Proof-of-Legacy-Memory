@@ -188,13 +188,13 @@ def get_halving(height: int) -> int:
 
 def get_static_boost(ram_type: str, height: int = 0) -> float:
     halving = get_halving(height)
-    return BOOST_TABLE.get(halving, BOOST_TABLE[7]).get(ram_type.upper(), 1.0)
+    return 1.0  # pure latency — no boost by RAM type
 
 def dag_base_for_height(height: int) -> int:
     return DAG_BASE_PER_HALVING.get(get_halving(height), 4096)
 
 # Current halving alias
-STATIC_BOOST = BOOST_TABLE[0]
+STATIC_BOOST = {"DDR2": 1.0, "DDR3": 1.0, "DDR4": 1.0, "DDR5": 1.0}
 FOUNDER_NAME = "Aluisio Fernandes (Aluminium)"
 GENESIS_MSG  = "Legacy hardware deserves a second life — PoLM Genesis, March 2026, polm.com.br"
 
@@ -746,7 +746,7 @@ class Blockchain:
             "mempool_size":  self.mempool.size(),
             "symbol":        SYMBOL,
             "halving":       get_halving(self.height),
-            "boost_table":   BOOST_TABLE.get(get_halving(self.height), BOOST_TABLE[0]),
+            "boost_table":   STATIC_BOOST,
             "min_ram_mb":    MIN_RAM_MB.get(get_halving(self.height), 4096),
             "founder":       FOUNDER_NAME if "FOUNDER_NAME" in dir() else "Aluisio Fernandes (Aluminium)",
             "founder_addr":  FOUNDER_ADDRESS,
@@ -1113,7 +1113,7 @@ class PoLMNode:
                 "founder_addr":   FOUNDER_ADDRESS,
                 "founder_lock":   FOUNDER_LOCK,
                 "halving":        get_halving(self.chain.height),
-                "boost_table":    BOOST_TABLE.get(get_halving(self.chain.height), BOOST_TABLE[0]),
+                "boost_table":    STATIC_BOOST,
                 "min_ram_gb":     MIN_RAM_MB.get(get_halving(self.chain.height), 4096) // 1024,
             })
 
