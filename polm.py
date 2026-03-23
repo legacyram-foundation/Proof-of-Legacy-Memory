@@ -570,6 +570,7 @@ class Blockchain:
         self.ledger     = Ledger()
         self._miner_ips: dict = {}  # miner_address → ip
         self._active_miners: dict = {}  # ip → miner info
+        self._peers: set = set()  # known peers
         self.mempool    = Mempool()
         self._diff      = T_DIFF if testnet else 3
         self._peers:    Set[str] = set()
