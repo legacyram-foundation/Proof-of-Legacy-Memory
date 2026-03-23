@@ -569,6 +569,7 @@ class Blockchain:
         self.tx_block:  Dict[int, List[str]] = {}
         self.ledger     = Ledger()
         self._miner_ips: dict = {}  # miner_address → ip
+        self._active_miners: dict = {}  # ip → miner info
         self.mempool    = Mempool()
         self._diff      = T_DIFF if testnet else 3
         self._peers:    Set[str] = set()
